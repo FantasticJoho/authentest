@@ -1,0 +1,217 @@
+### AuthTest.http — Tests manuels des endpoints API
+### API: http://localhost:5000
+### X-Api-Key: dev-secret-key
+###
+### WORKFLOW:
+### 1. Démarrer l'API: dotnet run --project AuthTest.Api
+### 2. Exécuter les requêtes dans l'ordre
+### 3. Copier les IDs/tokens retournés dans les variables
+
+@baseUrl = http://localhost:5000
+@apiKey = dev-secret-key
+
+# ============================================================
+# ÉTAPE 1 — Créer des utilisateurs
+# ============================================================
+
+### 1.1 Créer utilisateur alice (premier utilisateur)
+POST {{baseUrl}}/users
+Content-Type: application/json
+X-Api-Key: {{apiKey}}
+
+{
+  "username": "alice",
+  "password": "Password123!"
+}
+
+### 1.2 Créer utilisateur bob
+POST {{baseUrl}}/users
+Content-Type: application/json
+X-Api-Key: {{apiKey}}
+
+{
+  "username": "bob",
+  "password": "Password456!"
+}
+
+### 1.3 Tenter de créer alice en doublon (doit retourner 409)
+POST {{baseUrl}}/users
+Content-Type: application/json
+X-Api-Key: {{apiKey}}
+
+{
+  "username": "alice",
+  "password": "autre"
+}
+
+# ============================================================
+# ÉTAPE 2 — Lister les utilisateurs
+# ============================================================
+
+### 2.1 GET /users — liste tous les utilisateurs
+GET {{baseUrl}}/users
+X-Api-Key: {{apiKey}}
+
+# ============================================================
+# ÉTAPE 3 — Vérification auth/check
+# ============================================================
+
+### 3.1 auth/check alice — doit retourner hasWebAuthn=false, mustChangePassword=true
+POST {{baseUrl}}/auth/check
+Content-Type: application/json
+X-Api-Key: {{apiKey}}
+
+{
+  "username": "alice"
+}
+
+### 3.2 auth/check utilisateur inexistant — doit retourner exists=false
+POST {{baseUrl}}/auth/check
+Content-Type: application/json
+X-Api-Key: {{apiKey}}
+
+{
+  "username": "unknown"
+}
+
+# ============================================================
+# ÉTAPE 4 — Login mot de passe
+# ============================================================
+
+### 4.1 Login alice — doit retourner token + mustChangePassword=true
+# Copier le token retourné dans @aliceToken ci-dessous
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+X-Api-Key: {{apiKey}}
+
+{
+  "username": "alice",
+  "password": "Password123!"
+}
+
+### 4.2 Login alice — mauvais mot de passe (doit retourner success=false)
+POST {{baseUrl}}/auth/login
+Content-Type: application/json
+X-Api-Key: {{apiKey}}
+
+{
+  "username": "alice",
+  "password": "wrong"
+}
+
+# ============================================================
+# ÉTAPE 5 — Changement de mot de passe
+# ============================================================
+
+# Remplacer ALICE_TOKEN par le token obtenu à l'étape 4.1
+@aliceToken = ALICE_TOKEN
+
+### 5.1 Changer le mot de passe d'alice
+POST {{baseUrl}}/auth/change-password
+Content-Type: application/json
+X-Api-Key: {{apiKey}}
+
+{
+  "token": "{{aliceToken}}",
+  "newPassword": "NewPassword123!"
+}
+
+### 5.2 Vérifier auth/check alice après changement (mustChangePassword doit être false)
+POST {{baseUrl}}/auth/check
+Content-Type: application/json
+X-Api-Key: {{apiKey}}
+
+{
+  "username": "alice"
+}
+
+# ============================================================
+# ÉTAPE 6 — WebAuthn Register begin
+# (Nécessite un navigateur pour compléter — juste tester begin)
+# ============================================================
+
+### 6.1 Register begin — doit retourner les options de création
+POST {{baseUrl}}/webauthn/register/begin
+Content-Type: application/json
+X-Api-Key: {{apiKey}}
+
+{
+  "token": "{{aliceToken}}"
+}
+
+### 6.2 Register begin sans token valide (doit retourner 401)
+POST {{baseUrl}}/webauthn/register/begin
+Content-Type: application/json
+X-Api-Key: {{apiKey}}
+
+{
+  "token": "invalid-token"
+}
+
+# ============================================================
+# ÉTAPE 7 — WebAuthn Authenticate begin
+# (Nécessite hasWebAuthn=true — non testable sans enrôlement)
+# ============================================================
+
+### 7.1 Authenticate begin alice — échoue si aucune clé enrôlée
+POST {{baseUrl}}/webauthn/authenticate/begin
+Content-Type: application/json
+X-Api-Key: {{apiKey}}
+
+{
+  "username": "alice"
+}
+
+# ============================================================
+# ÉTAPE 8 — Reset 2FA
+# ============================================================
+
+# Remplacer ALICE_ID par l'ID d'alice obtenu à l'étape 2.1
+@aliceId = ALICE_ID
+
+### 8.1 Reset 2FA d'alice (supprime toutes ses clés WebAuthn)
+POST {{baseUrl}}/users/{{aliceId}}/reset-2fa
+Content-Type: application/json
+X-Api-Key: {{apiKey}}
+
+{}
+
+### 8.2 Vérifier auth/check alice après reset (hasWebAuthn doit être false)
+POST {{baseUrl}}/auth/check
+Content-Type: application/json
+X-Api-Key: {{apiKey}}
+
+{
+  "username": "alice"
+}
+
+# ============================================================
+# ÉTAPE 9 — Suppression utilisateur
+# ============================================================
+
+# Remplacer BOB_ID par l'ID de bob obtenu à l'étape 2.1
+@bobId = BOB_ID
+
+### 9.1 Supprimer bob
+DELETE {{baseUrl}}/users/{{bobId}}
+X-Api-Key: {{apiKey}}
+
+### 9.2 Vérifier que bob est supprimé (doit retourner exists=false)
+POST {{baseUrl}}/auth/check
+Content-Type: application/json
+X-Api-Key: {{apiKey}}
+
+{
+  "username": "bob"
+}
+
+# ============================================================
+# ÉTAPE 10 — Sécurité API Key
+# ============================================================
+
+### 10.1 Requête sans X-Api-Key (doit retourner 401)
+GET {{baseUrl}}/users
+
+### 10.2 Requête avec mauvaise API key (doit retourner 401)
+GET {{baseUrl}}/users
+X-Api-Key: wrong-key
