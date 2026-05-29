@@ -10,13 +10,16 @@ builder.Services.AddDbContext<AppDbContext>(o =>
     o.UseInMemoryDatabase("AuthTestDb"));
 
 builder.Services.AddSingleton<Fido2>(_ =>
-    new Fido2(new Fido2.Configuration
+{
+    var origins = builder.Configuration.GetSection("Fido2:Origins").Get<string[]>()
+                  ?? new[] { "http://localhost:5050" };
+    return new Fido2(new Fido2.Configuration
     {
         ServerDomain = builder.Configuration["Fido2:ServerDomain"] ?? "localhost",
         ServerName   = builder.Configuration["Fido2:ServerName"] ?? "AuthTest",
-        Origin       = builder.Configuration.GetSection("Fido2:Origins").Get<string[]>()?[0]
-                       ?? "https://localhost:5000"
-    }));
+        Origins      = new HashSet<string>(origins, StringComparer.OrdinalIgnoreCase)
+    });
+});
 
 builder.Services.AddMemoryCache();
 
