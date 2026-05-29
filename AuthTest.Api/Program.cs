@@ -28,13 +28,16 @@ builder.Services.AddCors(options =>
         policy.WithOrigins(origins).AllowAnyHeader().AllowAnyMethod());
 });
 
-builder.Services.AddControllers();
+builder.Services.AddControllers()
+    .AddJsonOptions(options =>
+    {
+        options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
+    });
 builder.Services.AddSingleton<SessionStore>();
 builder.Services.AddSingleton<ChallengeStore>();
 
 var app = builder.Build();
 
-app.UseHttpsRedirection();
 app.UseCors("WebFormsPolicy");
 app.UseMiddleware<ApiKeyMiddleware>();
 app.MapControllers();
