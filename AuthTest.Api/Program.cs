@@ -11,13 +11,12 @@ builder.Services.AddDbContext<AppDbContext>(o =>
 
 builder.Services.AddSingleton<Fido2>(_ =>
 {
-    var fido2Origins = builder.Configuration.GetSection("Fido2:Origins").Get<string[]>()
-                       ?? new[] { "http://localhost:8081" };
+    var origin = builder.Configuration["Fido2:Origin"] ?? "http://localhost:8081";
     return new Fido2(new Fido2.Configuration
     {
         ServerDomain = builder.Configuration["Fido2:ServerDomain"] ?? "localhost",
         ServerName   = builder.Configuration["Fido2:ServerName"] ?? "AuthTest",
-        Origins      = new HashSet<string>(fido2Origins, StringComparer.OrdinalIgnoreCase)
+        Origin       = origin
     });
 });
 
