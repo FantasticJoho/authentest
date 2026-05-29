@@ -24,7 +24,7 @@ namespace AuthTest.Web
         {
             try
             {
-                var users = await ApiClient.GetAsync<List<Dictionary<string, object>>>("users");
+                var users = await ApiClient.GetAsync<List<UserDto>>("users");
                 gvUsers.DataSource = users;
                 gvUsers.DataBind();
             }

@@ -66,6 +66,7 @@
   <ItemGroup>
     <Compile Include="ApiClient.cs" />
     <Compile Include="SessionHelper.cs" />
+    <Compile Include="UserDto.cs" />
     <Compile Include="Login.aspx.cs">
       <DependentUpon>Login.aspx</DependentUpon>
     </Compile>
