@@ -15,9 +15,9 @@ public class WebAuthnController : ControllerBase
     private readonly AppDbContext _db;
     private readonly SessionStore _sessions;
     private readonly ChallengeStore _challenges;
-    private readonly Fido2 _fido2;
+    private readonly IFido2 _fido2;
 
-    public WebAuthnController(AppDbContext db, SessionStore sessions, ChallengeStore challenges, Fido2 fido2)
+    public WebAuthnController(AppDbContext db, SessionStore sessions, ChallengeStore challenges, IFido2 fido2)
     {
         _db = db;
         _sessions = sessions;
@@ -34,7 +34,7 @@ public class WebAuthnController : ControllerBase
         var user = await _db.Users.FindAsync(session.UserId);
         if (user is null) return NotFound();
 
-        var fidoUser = new Fido2NetLib.User
+        var fidoUser = new Fido2User
         {
             Id = user.Id.ToByteArray(),
             Name = user.Username,
@@ -52,11 +52,13 @@ public class WebAuthnController : ControllerBase
             AuthenticatorAttachment = AuthenticatorAttachment.Platform
         };
 
-        var options = _fido2.RequestNewCredential(
-            fidoUser,
-            existingKeys,
-            authenticatorSelection,
-            AttestationConveyancePreference.None);
+        var options = _fido2.RequestNewCredential(new RequestNewCredentialParams
+        {
+            User = fidoUser,
+            ExcludeCredentials = existingKeys,
+            AuthenticatorSelection = authenticatorSelection,
+            AttestationPreference = AttestationConveyancePreference.None
+        });
 
         _challenges.StoreRegisterOptions(req.Token, options);
 
@@ -78,22 +80,24 @@ public class WebAuthnController : ControllerBase
         var user = await _db.Users.FindAsync(session.UserId);
         if (user is null) return NotFound();
 
-        IsCredentialIdUniqueToUserAsyncDelegate isUniqueCallback = async (credIdParams) =>
-            !await _db.Credentials.AnyAsync(c => c.CredentialId.SequenceEqual(credIdParams.CredentialId));
+        IsCredentialIdUniqueToUserAsyncDelegate isUniqueCallback = async (credIdParams, ct) =>
+            !await _db.Credentials.AnyAsync(c => c.CredentialId.SequenceEqual(credIdParams.CredentialId), ct);
 
         try
         {
-            var makeResult = await _fido2.MakeNewCredentialAsync(req.AttestationResponse, storedOptions, isUniqueCallback, null);
-
-            if (makeResult.Status != "ok")
-                return BadRequest(new { error = makeResult.ErrorMessage });
+            var makeResult = await _fido2.MakeNewCredentialAsync(new MakeNewCredentialParams
+            {
+                AttestationResponse = req.AttestationResponse,
+                OriginalOptions = storedOptions,
+                IsCredentialIdUniqueToUserCallback = isUniqueCallback
+            });
 
             var credential = new WebAuthnCredential
             {
                 UserId = session.UserId,
                 Name = req.KeyName,
-                CredentialId = makeResult.Result!.CredentialId,
-                PublicKey = makeResult.Result.PublicKey,
+                CredentialId = makeResult.Id,
+                PublicKey = makeResult.PublicKey,
                 SignCount = 0,
                 AaGuid = string.Empty
             };
@@ -125,7 +129,11 @@ public class WebAuthnController : ControllerBase
             .Select(c => new PublicKeyCredentialDescriptor(c.CredentialId))
             .ToList();
 
-        var options = _fido2.GetAssertionOptions(allowedKeys, UserVerificationRequirement.Preferred);
+        var options = _fido2.GetAssertionOptions(new GetAssertionOptionsParams
+        {
+            AllowedCredentials = allowedKeys,
+            UserVerification = UserVerificationRequirement.Preferred
+        });
 
         _challenges.StoreAssertOptions($"auth:{req.Username.ToLower()}", options);
 
@@ -152,21 +160,22 @@ public class WebAuthnController : ControllerBase
         if (credential is null)
             return BadRequest(new { error = "Credential not found" });
 
-        IsUserHandleOwnerOfCredentialIdAsync isUserOwner = async (p) =>
+        IsUserHandleOwnerOfCredentialIdAsync isUserOwner = async (p, ct) =>
             await _db.Credentials.AnyAsync(
-                c => c.CredentialId.SequenceEqual(p.CredentialId) && c.UserId == user.Id);
+                c => c.CredentialId.SequenceEqual(p.CredentialId) && c.UserId == user.Id, ct);
 
         try
         {
-            var result = await _fido2.MakeAssertionAsync(
-                req.AssertionResponse,
-                storedOptions,
-                credential.PublicKey,
-                credential.SignCount,
-                isUserOwner,
-                null);
+            var result = await _fido2.MakeAssertionAsync(new MakeAssertionParams
+            {
+                AssertionResponse = req.AssertionResponse,
+                OriginalOptions = storedOptions,
+                StoredPublicKey = credential.PublicKey,
+                StoredSignatureCounter = credential.SignCount,
+                IsUserHandleOwnerOfCredentialIdCallback = isUserOwner
+            });
 
-            credential.SignCount = result.Counter;
+            credential.SignCount = result.SignCount;
             await _db.SaveChangesAsync();
 
             var token = _sessions.CreateSession(user.Id, true);

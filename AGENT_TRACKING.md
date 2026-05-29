@@ -23,11 +23,12 @@
 | Phase 7 - E2E validation | TODO |
 
 ## Deltas récents
-- Phase 6: AuthTest.http créé (10 scénarios, tous endpoints couverts)
-- Commit sur pr/phase6-http-tests
+- Migration Fido2NetLib 1.0.0-alpha → Fido2 4.0.1 (stable)
+- Program.cs: AddSingleton<IFido2> avec Fido2Configuration (RPID/RPName/Origins)
+- WebAuthnController.cs: IFido2, params objects API, delegates +CancellationToken
 
 ## Fichiers touchés
-AuthTest.http (nouveau)
+AuthTest.Api.csproj, Program.cs, Controllers/WebAuthnController.cs
 
 ## Prochaine action
 Phase 7: démarrer l'API, exécuter AuthTest.http manuellement, valider les parcours utilisateurs du DoD.
