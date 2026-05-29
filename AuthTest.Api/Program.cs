@@ -11,8 +11,8 @@ builder.Services.AddDbContext<AppDbContext>(o =>
 
 builder.Services.AddSingleton<IFido2>(_ => new Fido2NetLib.Fido2(new Fido2Configuration
 {
-    RPID    = builder.Configuration["Fido2:ServerDomain"] ?? "localhost",
-    RPName  = builder.Configuration["Fido2:ServerName"] ?? "AuthTest",
+    ServerDomain = builder.Configuration["Fido2:ServerDomain"] ?? "localhost",
+    ServerName   = builder.Configuration["Fido2:ServerName"] ?? "AuthTest",
     Origins = new HashSet<string>(
         builder.Configuration.GetSection("Fido2:Origins").Get<string[]>()
         ?? new[] { "http://localhost:8081" },

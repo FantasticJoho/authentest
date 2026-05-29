@@ -155,7 +155,7 @@ public class WebAuthnController : ControllerBase
             return BadRequest(new { error = "No pending challenge" });
 
         var credential = user.Credentials
-            .FirstOrDefault(c => c.CredentialId.SequenceEqual(req.AssertionResponse.Id));
+            .FirstOrDefault(c => c.CredentialId.SequenceEqual(req.AssertionResponse.RawId));
 
         if (credential is null)
             return BadRequest(new { error = "Credential not found" });
