@@ -1,5 +1,6 @@
 using AuthTest.Api.Data;
 using AuthTest.Api.Middleware;
+using AuthTest.Api.Services;
 using Fido2NetLib;
 using Microsoft.EntityFrameworkCore;
 
@@ -28,6 +29,8 @@ builder.Services.AddCors(options =>
 });
 
 builder.Services.AddControllers();
+builder.Services.AddSingleton<SessionStore>();
+builder.Services.AddSingleton<ChallengeStore>();
 
 var app = builder.Build();
 
