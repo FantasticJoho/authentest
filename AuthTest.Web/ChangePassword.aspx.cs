@@ -24,6 +24,13 @@ namespace AuthTest.Web
         {
             var newPassword = txtNewPassword.Text;
             var confirmPassword = txtConfirmPassword.Text;
+            var token = SessionHelper.SessionToken;
+
+            if (string.IsNullOrWhiteSpace(token))
+            {
+                Response.Redirect("Login.aspx");
+                return;
+            }
 
             if (string.IsNullOrEmpty(newPassword) || string.IsNullOrEmpty(confirmPassword))
             {
@@ -46,7 +53,7 @@ namespace AuthTest.Web
                 return;
             }
 
-            var result = await ApiClient.PostAsync<Dictionary<string, object>>("auth/change-password", new { newPassword });
+            var result = await ApiClient.PostAsync<Dictionary<string, object>>("auth/change-password", new { token, newPassword });
 
             bool success = result.ContainsKey("success") && (bool)result["success"];
             if (!success)
@@ -58,7 +65,7 @@ namespace AuthTest.Web
 
             lblMessage.Text = "Mot de passe changé avec succès. Redirection...";
             lblMessage.CssClass = "success";
-            SessionHelper.IsEnrolled = true;
+            SessionHelper.IsEnrolled = false;
             Response.Redirect("Enroll.aspx");
         }
     }

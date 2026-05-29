@@ -99,12 +99,14 @@ X-Api-Key: {{apiKey}}
   "password": "wrong"
 }
 
+###
+
 # ============================================================
 # ÉTAPE 5 — Changement de mot de passe
 # ============================================================
 
 # Remplacer ALICE_TOKEN par le token obtenu à l'étape 4.1
-@aliceToken = ALICE_TOKEN
+@aliceToken = 285c122e6ffd40f4ac9a541f897de1c6
 
 ### 5.1 Changer le mot de passe d'alice
 POST {{baseUrl}}/auth/change-password
@@ -162,6 +164,8 @@ X-Api-Key: {{apiKey}}
   "username": "alice"
 }
 
+###
+
 # ============================================================
 # ÉTAPE 8 — Reset 2FA
 # ============================================================
@@ -184,6 +188,8 @@ X-Api-Key: {{apiKey}}
 {
   "username": "alice"
 }
+
+###
 
 # ============================================================
 # ÉTAPE 9 — Suppression utilisateur

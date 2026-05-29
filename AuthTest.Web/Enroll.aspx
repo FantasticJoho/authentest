@@ -25,6 +25,10 @@
     <asp:Panel ID="pnlRegisterWebAuthn" runat="server" CssClass="section">
       <h3>Ajouter une clé WebAuthn</h3>
       <p>Enregistrez une clé de sécurité pour l'authentification rapide.</p>
+      <div class="field">
+        <label>Nom de la clé</label>
+        <asp:TextBox ID="txtKeyName" runat="server" />
+      </div>
       <asp:HiddenField ID="hdnCreationOptions" runat="server" />
       <asp:HiddenField ID="hdnAttestationResponse" runat="server" />
       <button type="button" onclick="startRegistration()">Enregistrer une clé</button>
@@ -78,7 +82,7 @@
     <!-- Step 2: Skip or Complete -->
     <asp:Panel ID="pnlComplete" runat="server" CssClass="section">
       <asp:Button ID="btnContinue" runat="server" Text="Continuer vers les utilisateurs" OnClick="btnContinue_Click" />
-      <asp:Button ID="btnSkip" runat="server" Text="Ignorer" OnClick="btnSkip_Click" />
+      <asp:Button ID="btnSkip" runat="server" Text="Ignorer" OnClick="btnSkip_Click" Visible="false" />
     </asp:Panel>
   </form>
 </body>

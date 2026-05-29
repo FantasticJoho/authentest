@@ -10,26 +10,28 @@ namespace AuthTest.Web
     {
         private static readonly JavaScriptSerializer Json = new JavaScriptSerializer();
 
-        protected async void Page_Load(object sender, EventArgs e)
+        protected void Page_Load(object sender, EventArgs e)
         {
+            if (!SessionHelper.IsAuthenticated) { Response.Redirect("Login.aspx"); return; }
+            if (SessionHelper.IsEnrolled) { Response.Redirect("Users.aspx"); return; }
+
             if (!IsPostBack)
             {
-                if (!SessionHelper.IsAuthenticated)
-                {
-                    Response.Redirect("Login.aspx");
-                    return;
-                }
+                RegisterAsyncTask(new PageAsyncTask(LoadOptionsAsync));
+            }
+        }
 
-                // Load registration options
-                try
-                {
-                    var options = await ApiClient.PostAsync<object>("webauthn/register/begin", new { });
-                    hdnCreationOptions.Value = Json.Serialize(options);
-                }
-                catch (Exception ex)
-                {
-                    lblRegisterError.Text = "Erreur lors du chargement des options d'enregistrement: " + ex.Message;
-                }
+        private async Task LoadOptionsAsync()
+        {
+            try
+            {
+                var options = await ApiClient.PostAsync<object>("webauthn/register/begin",
+                    new { token = SessionHelper.SessionToken });
+                hdnCreationOptions.Value = Json.Serialize(options);
+            }
+            catch (Exception ex)
+            {
+                lblRegisterError.Text = "Erreur chargement options : " + ex.Message;
             }
         }
 
@@ -40,45 +42,41 @@ namespace AuthTest.Web
 
         private async Task RegisterCompleteAsync()
         {
+            if (string.IsNullOrWhiteSpace(SessionHelper.SessionToken)) { Response.Redirect("Login.aspx"); return; }
+
+            var keyName = txtKeyName.Text?.Trim();
+            if (string.IsNullOrWhiteSpace(keyName)) { lblRegisterError.Text = "Le nom de clé est obligatoire."; return; }
+
             var attestationJson = hdnAttestationResponse.Value;
-            if (string.IsNullOrEmpty(attestationJson))
-            {
-                lblRegisterError.Text = "Réponse d'attestation manquante.";
-                return;
-            }
+            if (string.IsNullOrEmpty(attestationJson)) { lblRegisterError.Text = "Réponse WebAuthn manquante."; return; }
 
             try
             {
                 var attestationResponse = Json.Deserialize<object>(attestationJson);
-                var result = await ApiClient.PostAsync<Dictionary<string, object>>("webauthn/register/complete", new { attestationResponse });
+                var result = await ApiClient.PostAsync<Dictionary<string, object>>("webauthn/register/complete",
+                    new { token = SessionHelper.SessionToken, keyName, attestationResponse });
 
                 bool success = result.ContainsKey("success") && (bool)result["success"];
-                if (!success)
-                {
-                    lblRegisterError.Text = result.ContainsKey("error") ? result["error"]?.ToString() : "Erreur d'enregistrement WebAuthn.";
-                    return;
-                }
+                if (!success) { lblRegisterError.Text = result.ContainsKey("error") ? result["error"]?.ToString() : "Erreur d'enrôlement."; return; }
 
-                lblRegisterError.Text = "Clé enregistrée avec succès !";
-                lblRegisterError.CssClass = "success";
                 SessionHelper.IsEnrolled = true;
+                Response.Redirect("Users.aspx");
             }
             catch (Exception ex)
             {
-                lblRegisterError.Text = "Erreur: " + ex.Message;
+                lblRegisterError.Text = "Erreur : " + ex.Message;
             }
         }
 
         protected void btnContinue_Click(object sender, EventArgs e)
         {
-            SessionHelper.IsEnrolled = true;
+            if (!SessionHelper.IsEnrolled) { lblRegisterError.Text = "Enrôlement WebAuthn obligatoire avant de continuer."; return; }
             Response.Redirect("Users.aspx");
         }
 
         protected void btnSkip_Click(object sender, EventArgs e)
         {
-            SessionHelper.IsEnrolled = true;
-            Response.Redirect("Users.aspx");
+            lblRegisterError.Text = "L'enrôlement WebAuthn est obligatoire.";
         }
     }
 }
