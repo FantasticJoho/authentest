@@ -1,0 +1,82 @@
+using System;
+using System.Collections.Generic;
+using System.Threading.Tasks;
+using System.Web.Script.Serialization;
+using System.Web.UI;
+
+namespace AuthTest.Web
+{
+    public partial class EnrollPage : Page
+    {
+        private static readonly JavaScriptSerializer Json = new JavaScriptSerializer();
+
+        protected void Page_Load(object sender, EventArgs e)
+        {
+            if (!SessionHelper.IsAuthenticated) { Response.Redirect("Login.aspx"); return; }
+            if (SessionHelper.IsEnrolled) { Response.Redirect("Users.aspx"); return; }
+
+            if (!IsPostBack)
+            {
+                RegisterAsyncTask(new PageAsyncTask(LoadOptionsAsync));
+            }
+        }
+
+        private async Task LoadOptionsAsync()
+        {
+            try
+            {
+                var options = await ApiClient.PostAsync<object>("webauthn/register/begin",
+                    new { token = SessionHelper.SessionToken });
+                hdnCreationOptions.Value = Json.Serialize(options);
+            }
+            catch (Exception ex)
+            {
+                lblRegisterError.Text = "Erreur chargement options : " + ex.Message;
+            }
+        }
+
+        protected async void btnRegisterComplete_Click(object sender, EventArgs e)
+        {
+            await RegisterCompleteAsync();
+        }
+
+        private async Task RegisterCompleteAsync()
+        {
+            if (string.IsNullOrWhiteSpace(SessionHelper.SessionToken)) { Response.Redirect("Login.aspx"); return; }
+
+            var keyName = txtKeyName.Text?.Trim();
+            if (string.IsNullOrWhiteSpace(keyName)) { lblRegisterError.Text = "Le nom de clé est obligatoire."; return; }
+
+            var attestationJson = hdnAttestationResponse.Value;
+            if (string.IsNullOrEmpty(attestationJson)) { lblRegisterError.Text = "Réponse WebAuthn manquante."; return; }
+
+            try
+            {
+                var attestationResponse = Json.Deserialize<object>(attestationJson);
+                var result = await ApiClient.PostAsync<Dictionary<string, object>>("webauthn/register/complete",
+                    new { token = SessionHelper.SessionToken, keyName, attestationResponse });
+
+                bool success = result.ContainsKey("success") && (bool)result["success"];
+                if (!success) { lblRegisterError.Text = result.ContainsKey("error") ? result["error"]?.ToString() : "Erreur d'enrôlement."; return; }
+
+                SessionHelper.IsEnrolled = true;
+                Response.Redirect("Users.aspx");
+            }
+            catch (Exception ex)
+            {
+                lblRegisterError.Text = "Erreur : " + ex.Message;
+            }
+        }
+
+        protected void btnContinue_Click(object sender, EventArgs e)
+        {
+            if (!SessionHelper.IsEnrolled) { lblRegisterError.Text = "Enrôlement WebAuthn obligatoire avant de continuer."; return; }
+            Response.Redirect("Users.aspx");
+        }
+
+        protected void btnSkip_Click(object sender, EventArgs e)
+        {
+            lblRegisterError.Text = "L'enrôlement WebAuthn est obligatoire.";
+        }
+    }
+}

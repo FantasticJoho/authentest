@@ -1,6 +1,15 @@
 # AGENT_TRACKING.md
 
-## Statut global: 55%
+## Progression globale: 85%
+
+## Phase en cours: Phase 7 - E2E validation (TODO)
+
+## PR Stack
+| Branch | Base | État |
+|--------|------|------|
+| pr/phase4-webforms | main | DONE |
+| pr/phase5-users-ui | pr/phase4-webforms | DONE |
+| pr/phase6-http-tests | pr/phase5-users-ui | DONE |
 
 | Phase | État |
 |-------|------|
@@ -8,14 +17,17 @@
 | Phase 1 - Foundation API | DONE |
 | Phase 2 - Auth password | DONE |
 | Phase 3 - WebAuthn backend | DONE |
-| Phase 4 - WebForms frontend | TODO |
-| Phase 5 - Users UI | TODO |
-| Phase 6 - HTTP tests | TODO |
+| Phase 4 - WebForms frontend | DONE |
+| Phase 5 - Users UI | DONE |
+| Phase 6 - HTTP tests | DONE |
 | Phase 7 - E2E validation | TODO |
 
 ## Deltas récents
-- Phase 2: AuthController (check/login/change-password), UsersController (CRUD + reset-2fa), SessionStore
-- Phase 3: WebAuthnController (register+authenticate begin/complete), ChallengeStore (stocke CredentialCreateOptions/AssertionOptions)
+- Phase 6: AuthTest.http créé (10 scénarios, tous endpoints couverts)
+- Commit sur pr/phase6-http-tests
 
-## Prochain bloc
-Phase 4: AuthTest.Web (WebForms 4.8) — login multi-étapes, changement MDP, enrôlement WebAuthn.
+## Fichiers touchés
+AuthTest.http (nouveau)
+
+## Prochaine action
+Phase 7: démarrer l'API, exécuter AuthTest.http manuellement, valider les parcours utilisateurs du DoD.

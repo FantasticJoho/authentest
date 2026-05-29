@@ -1,0 +1,441 @@
+c:\Users\jonat\repo\authentest.worktrees\copilot-worktree-2026-05-29T07-03-16\fido2probe\fido2probe.csproj : warning NU1902: Le package 'Microsoft.IdentityModel.JsonWebTokens' 5.2.4 présente une vulnérabilité de gravité moyenne connue, https://github.com/advisories/GHSA-59j7-ghrg-fj52.
+c:\Users\jonat\repo\authentest.worktrees\copilot-worktree-2026-05-29T07-03-16\fido2probe\fido2probe.csproj : warning NU1903: Le package 'Newtonsoft.Json' 11.0.2 présente une vulnérabilité de gravité élevé(e) connue, https://github.com/advisories/GHSA-5crp-9r3c-p9vr.
+c:\Users\jonat\repo\authentest.worktrees\copilot-worktree-2026-05-29T07-03-16\fido2probe\fido2probe.csproj : warning NU1903: Le package 'PeterO.Cbor' 3.2.1 présente une vulnérabilité de gravité élevé(e) connue, https://github.com/advisories/GHSA-cxw4-9qv9-vx5h.
+c:\Users\jonat\repo\authentest.worktrees\copilot-worktree-2026-05-29T07-03-16\fido2probe\fido2probe.csproj : warning NU1902: Le package 'System.IdentityModel.Tokens.Jwt' 5.2.4 présente une vulnérabilité de gravité moyenne connue, https://github.com/advisories/GHSA-59j7-ghrg-fj52.
+c:\Users\jonat\repo\authentest.worktrees\copilot-worktree-2026-05-29T07-03-16\fido2probe\fido2probe.csproj : warning NU1902: Le package 'Microsoft.IdentityModel.JsonWebTokens' 5.2.4 présente une vulnérabilité de gravité moyenne connue, https://github.com/advisories/GHSA-59j7-ghrg-fj52.
+c:\Users\jonat\repo\authentest.worktrees\copilot-worktree-2026-05-29T07-03-16\fido2probe\fido2probe.csproj : warning NU1903: Le package 'Newtonsoft.Json' 11.0.2 présente une vulnérabilité de gravité élevé(e) connue, https://github.com/advisories/GHSA-5crp-9r3c-p9vr.
+c:\Users\jonat\repo\authentest.worktrees\copilot-worktree-2026-05-29T07-03-16\fido2probe\fido2probe.csproj : warning NU1903: Le package 'PeterO.Cbor' 3.2.1 présente une vulnérabilité de gravité élevé(e) connue, https://github.com/advisories/GHSA-cxw4-9qv9-vx5h.
+c:\Users\jonat\repo\authentest.worktrees\copilot-worktree-2026-05-29T07-03-16\fido2probe\fido2probe.csproj : warning NU1902: Le package 'System.IdentityModel.Tokens.Jwt' 5.2.4 présente une vulnérabilité de gravité moyenne connue, https://github.com/advisories/GHSA-59j7-ghrg-fj52.
+=== Fido2NetLib Assembly Info ===
+FullName: Fido2NetLib, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null
+
+=== Public Types ===
+
+Found 37 public types
+
+
+TYPE: Fido2NetLib.AssertionOptions
+  Property: IEnumerable`1 AllowCredentials
+  Property: Byte[] Challenge
+  Property: String ErrorMessage
+  Property: String RpId
+  Property: String Status
+  Property: UInt32 Timeout
+  Property: UserVerificationRequirement UserVerification
+  Method: AssertionOptions FromJson(String json)
+  Method: IEnumerable`1 get_AllowCredentials()
+  Method: Byte[] get_Challenge()
+  Method: String get_ErrorMessage()
+  Method: String get_RpId()
+  Method: String get_Status()
+  Method: UInt32 get_Timeout()
+  Method: UserVerificationRequirement get_UserVerification()
+  Method: Void set_AllowCredentials(IEnumerable`1 value)
+  Method: Void set_Challenge(Byte[] value)
+  Method: Void set_ErrorMessage(String value)
+  Method: Void set_RpId(String value)
+  Method: Void set_Status(String value)
+  Method: Void set_Timeout(UInt32 value)
+  Method: Void set_UserVerification(UserVerificationRequirement value)
+  Method: String ToJson()
+
+TYPE: Fido2NetLib.AttestedCredentialData
+  Property: Byte[] Aaguid
+  Property: Byte[] CredentialID
+  Property: Byte[] CredentialPublicKey
+  Method: Byte[] get_Aaguid()
+  Method: Byte[] get_CredentialID()
+  Method: Byte[] get_CredentialPublicKey()
+
+TYPE: Fido2NetLib.AuthDataHelper
+  Method: Byte[] AaguidFromAttnCertExts(X509ExtensionCollection exts)
+  Method: Byte[] AttestationExtensionBytes(X509ExtensionCollection exts)
+  Method: String EKUFromAttnCertExts(X509ExtensionCollection exts)
+  Method: Byte[] GetAttestionChallenge(Byte[] attExtBytes)
+  Method: Byte[] GetEcDsaSigValue(Byte[] ecDsaSig, Int32& offset, Boolean longForm)
+  Method: HashAlgorithm GetHasher(HashAlgorithmName hashName)
+  Method: Byte[] GetSizedByteArray(Memory`1 ab, Int32& offset, UInt16 len)
+  Method: Boolean IsAttnCertCACert(X509ExtensionCollection exts)
+  Method: Boolean IsValidPackedAttnCertSubject(String attnCertSubj)
+  Method: String SANFromAttnCertExts(X509ExtensionCollection exts)
+  Method: Byte[] SigFromEcDsaSig(Byte[] ecDsaSig)
+  Method: Memory`1 U2FKeyFromCOSEKey(CBORObject COSEKey)
+  Method: Int32 U2FTransportsFromAttnCert(X509ExtensionCollection exts)
+  Method: Boolean VerifySigWithCoseKey(Byte[] data, CBORObject coseKey, Byte[] sig)
+
+TYPE: Fido2NetLib.AuthenticatorAssertionRawResponse
+  Property: Byte[] Id
+  Property: Byte[] RawId
+  Property: AssertionResponse Response
+  Property: String Type
+  Method: Byte[] get_Id()
+  Method: Byte[] get_RawId()
+  Method: AssertionResponse get_Response()
+  Method: String get_Type()
+  Method: Void set_Id(Byte[] value)
+  Method: Void set_RawId(Byte[] value)
+  Method: Void set_Response(AssertionResponse value)
+  Method: Void set_Type(String value)
+
+TYPE: Fido2NetLib.AuthenticatorAssertionResponse
+  Base: Fido2NetLib.AuthenticatorResponse
+  Property: Byte[] AuthenticatorData
+  Property: Object CredentialId
+  Property: AuthenticatorAssertionRawResponse Raw
+  Property: Byte[] Signature
+  Property: Byte[] UserHandle
+  Method: Byte[] get_AuthenticatorData()
+  Method: Object get_CredentialId()
+  Method: AuthenticatorAssertionRawResponse get_Raw()
+  Method: Byte[] get_Signature()
+  Method: Byte[] get_UserHandle()
+  Method: Void set_AuthenticatorData(Byte[] value)
+  Method: Void set_Raw(AuthenticatorAssertionRawResponse value)
+  Method: Void set_Signature(Byte[] value)
+  Method: Void set_UserHandle(Byte[] value)
+  Method: Task`1 VerifyAsync(AssertionOptions options, String expectedOrigin, Byte[] storedPublicKey, UInt32 storedSignatureCounter, IsUserHandleOwnerOfCredentialIdAsync isUserHandleOwnerOfCredId, Byte[] requestTokenBindingId)
+
+TYPE: Fido2NetLib.AuthenticatorAttestationRawResponse
+  Property: Byte[] Id
+  Property: Byte[] RawId
+  Property: ResponseData Response
+  Property: String Type
+  Method: Byte[] get_Id()
+  Method: Byte[] get_RawId()
+  Method: ResponseData get_Response()
+  Method: String get_Type()
+  Method: Void set_Id(Byte[] value)
+  Method: Void set_RawId(Byte[] value)
+  Method: Void set_Response(ResponseData value)
+  Method: Void set_Type(String value)
+
+TYPE: Fido2NetLib.AuthenticatorAttestationResponse
+  Base: Fido2NetLib.AuthenticatorResponse
+  Property: ParsedAttestionObject AttestionObject
+  Property: AuthenticatorAttestationRawResponse Raw
+  Method: ParsedAttestionObject get_AttestionObject()
+  Method: AuthenticatorAttestationRawResponse get_Raw()
+  Method: AuthenticatorAttestationResponse Parse(AuthenticatorAttestationRawResponse rawResponse)
+  Method: Void set_AttestionObject(ParsedAttestionObject value)
+  Method: Task`1 VerifyAsync(CredentialCreateOptions originalOptions, String expectedOrigin, IsCredentialIdUniqueToUserAsyncDelegate isCredentialIdUniqueToUser, Byte[] requestTokenBindingId)
+
+TYPE: Fido2NetLib.AuthenticatorData
+  Property: AttestedCredentialData AttData
+  Property: Boolean AttestedCredentialDataPresent
+  Property: Byte[] Extensions
+  Property: Boolean ExtensionsPresent
+  Property: Byte Flags
+  Property: Byte[] RpIdHash
+  Property: Byte[] SignCount
+  Property: Boolean UserPresent
+  Property: Boolean UserVerified
+  Method: AttestedCredentialData get_AttData()
+  Method: Boolean get_AttestedCredentialDataPresent()
+  Method: Byte[] get_Extensions()
+  Method: Boolean get_ExtensionsPresent()
+  Method: Byte get_Flags()
+  Method: Byte[] get_RpIdHash()
+  Method: Byte[] get_SignCount()
+  Method: Boolean get_UserPresent()
+  Method: Boolean get_UserVerified()
+
+TYPE: Fido2NetLib.AuthenticatorResponse
+  Property: Byte[] Challenge
+  Property: String Origin
+  Property: TokenBindingDto TokenBinding
+  Property: String Type
+  Method: Byte[] get_Challenge()
+  Method: String get_Origin()
+  Method: TokenBindingDto get_TokenBinding()
+  Method: String get_Type()
+  Method: Void set_Challenge(Byte[] value)
+  Method: Void set_Origin(String value)
+  Method: Void set_TokenBinding(TokenBindingDto value)
+  Method: Void set_Type(String value)
+
+TYPE: Fido2NetLib.AuthenticatorSelection
+  Property: AuthenticatorAttachment AuthenticatorAttachment
+  Property: AuthenticatorSelection Default
+  Property: Boolean RequireResidentKey
+  Property: UserVerificationRequirement UserVerification
+  Method: AuthenticatorAttachment get_AuthenticatorAttachment()
+  Method: AuthenticatorSelection get_Default()
+  Method: Boolean get_RequireResidentKey()
+  Method: UserVerificationRequirement get_UserVerification()
+  Method: Void set_AuthenticatorAttachment(AuthenticatorAttachment value)
+  Method: Void set_RequireResidentKey(Boolean value)
+  Method: Void set_UserVerification(UserVerificationRequirement value)
+
+TYPE: Fido2NetLib.Base64Url
+  Method: Byte[] Decode(String arg)
+  Method: String Encode(Byte[] arg)
+
+TYPE: Fido2NetLib.Base64UrlConverter
+  Base: Newtonsoft.Json.JsonConverter`1[[System.Byte[], System.Private.CoreLib, Version=10.0.0.0, Culture=neutral, PublicKeyToken=7cec85d7bea7798e]]
+  Method: Byte[] ReadJson(JsonReader reader, Type objectType, Byte[] existingValue, Boolean hasExistingValue, JsonSerializer serializer)
+  Method: Void WriteJson(JsonWriter writer, Byte[] value, JsonSerializer serializer)
+
+TYPE: Fido2NetLib.CertInfo
+  Property: UInt16 Alg
+  Property: Byte[] AttestedName
+  Property: Byte[] AttestedQualifiedNameBuffer
+  Property: Byte[] Clock
+  Property: Byte[] ExtraData
+  Property: Byte[] FirmwareVersion
+  Property: Byte[] Magic
+  Property: Byte[] QualifiedSigner
+  Property: Byte[] Raw
+  Property: Byte[] ResetCount
+  Property: Byte[] RestartCount
+  Property: Byte[] Safe
+  Property: Byte[] Type
+  Method: UInt16 get_Alg()
+  Method: Byte[] get_AttestedName()
+  Method: Byte[] get_AttestedQualifiedNameBuffer()
+  Method: Byte[] get_Clock()
+  Method: Byte[] get_ExtraData()
+  Method: Byte[] get_FirmwareVersion()
+  Method: Byte[] get_Magic()
+  Method: Byte[] get_QualifiedSigner()
+  Method: Byte[] get_Raw()
+  Method: Byte[] get_ResetCount()
+  Method: Byte[] get_RestartCount()
+  Method: Byte[] get_Safe()
+  Method: Byte[] get_Type()
+  Method: ValueTuple`2 NameFromTPM2BName(Memory`1 ab, Int32& offset)
+
+TYPE: Fido2NetLib.CredentialCreateOptions
+  Property: AttestationConveyancePreference Attestation
+  Property: AuthenticatorSelection AuthenticatorSelection
+  Property: Byte[] Challenge
+  Property: String ErrorMessage
+  Property: List`1 ExcludeCredentials
+  Property: List`1 PubKeyCredParams
+  Property: Rp Rp
+  Property: String Status
+  Property: Int64 Timeout
+  Property: User User
+  Method: CredentialCreateOptions Create(Configuration config, Byte[] challenge, User user, AuthenticatorSelection authenticatorSelection, AttestationConveyancePreference attestationConveyancePreference, List`1 excludeCredentials)
+  Method: CredentialCreateOptions FromJson(String json)
+  Method: AttestationConveyancePreference get_Attestation()
+  Method: AuthenticatorSelection get_AuthenticatorSelection()
+  Method: Byte[] get_Challenge()
+  Method: String get_ErrorMessage()
+  Method: List`1 get_ExcludeCredentials()
+  Method: List`1 get_PubKeyCredParams()
+  Method: Rp get_Rp()
+  Method: String get_Status()
+  Method: Int64 get_Timeout()
+  Method: User get_User()
+  Method: Void set_Attestation(AttestationConveyancePreference value)
+  Method: Void set_AuthenticatorSelection(AuthenticatorSelection value)
+  Method: Void set_Challenge(Byte[] value)
+  Method: Void set_ErrorMessage(String value)
+  Method: Void set_ExcludeCredentials(List`1 value)
+  Method: Void set_PubKeyCredParams(List`1 value)
+  Method: Void set_Rp(Rp value)
+  Method: Void set_Status(String value)
+  Method: Void set_Timeout(Int64 value)
+  Method: Void set_User(User value)
+  Method: String ToJson()
+
+TYPE: Fido2NetLib.Development.DevelopmentInMemoryStore
+  Method: Void AddCredentialToUser(User user, StoredCredential credential)
+  Method: StoredCredential GetCredentialById(Byte[] id)
+  Method: List`1 GetCredentialsByUser(User user)
+  Method: Task`1 GetCredentialsByUserHandleAsync(Byte[] userHandle)
+  Method: User GetOrAddUser(String username, Func`1 addCallback)
+  Method: User GetUser(String username)
+  Method: Task`1 GetUsersByCredentialIdAsync(Byte[] credentialId)
+  Method: Void UpdateCounter(Byte[] credentialId, UInt32 counter)
+
+TYPE: Fido2NetLib.Development.StoredCredential
+  Property: PublicKeyCredentialDescriptor Descriptor
+  Property: Byte[] PublicKey
+  Property: UInt32 SignatureCounter
+  Property: Byte[] UserHandle
+  Property: Byte[] UserId
+  Method: PublicKeyCredentialDescriptor get_Descriptor()
+  Method: Byte[] get_PublicKey()
+  Method: UInt32 get_SignatureCounter()
+  Method: Byte[] get_UserHandle()
+  Method: Byte[] get_UserId()
+  Method: Void set_Descriptor(PublicKeyCredentialDescriptor value)
+  Method: Void set_PublicKey(Byte[] value)
+  Method: Void set_SignatureCounter(UInt32 value)
+  Method: Void set_UserHandle(Byte[] value)
+  Method: Void set_UserId(Byte[] value)
+
+TYPE: Fido2NetLib.Fido2
+  Method: AssertionOptions GetAssertionOptions(IEnumerable`1 allowedCredentials, UserVerificationRequirement userVerification)
+  Method: Task`1 MakeAssertionAsync(AuthenticatorAssertionRawResponse assertionResponse, AssertionOptions originalOptions, Byte[] storedPublicKey, UInt32 storedSignatureCounter, IsUserHandleOwnerOfCredentialIdAsync isUserHandleOwnerOfCredentialIdCallback, Byte[] requestTokenBindingId)
+  Method: Task`1 MakeNewCredentialAsync(AuthenticatorAttestationRawResponse attestionResponse, CredentialCreateOptions origChallenge, IsCredentialIdUniqueToUserAsyncDelegate isCredentialIdUniqueToUser, Byte[] requestTokenBindingId)
+  Method: CredentialCreateOptions RequestNewCredential(User user, List`1 excludeCredentials)
+  Method: CredentialCreateOptions RequestNewCredential(User user, List`1 excludeCredentials, AuthenticatorSelection authenticatorSelection, AttestationConveyancePreference attestationPreference)
+
+TYPE: Fido2NetLib.IsCredentialIdUniqueToUserAsyncDelegate
+  Base: System.MulticastDelegate
+  Implements: System.ICloneable, System.Runtime.Serialization.ISerializable
+  Method: IAsyncResult BeginInvoke(IsCredentialIdUniqueToUserParams credentialIdUserParams, AsyncCallback callback, Object object)
+  Method: Task`1 EndInvoke(IAsyncResult result)
+  Method: Task`1 Invoke(IsCredentialIdUniqueToUserParams credentialIdUserParams)
+
+TYPE: Fido2NetLib.IsUserHandleOwnerOfCredentialIdAsync
+  Base: System.MulticastDelegate
+  Implements: System.ICloneable, System.Runtime.Serialization.ISerializable
+  Method: IAsyncResult BeginInvoke(IsUserHandleOwnerOfCredentialIdParams credentialIdUserHandleParams, AsyncCallback callback, Object object)
+  Method: Task`1 EndInvoke(IAsyncResult result)
+  Method: Task`1 Invoke(IsUserHandleOwnerOfCredentialIdParams credentialIdUserHandleParams)
+
+TYPE: Fido2NetLib.Objects.AssertionVerificationSuccess
+  Property: UInt32 Counter
+  Property: Byte[] CredentialId
+  Method: UInt32 get_Counter()
+  Method: Byte[] get_CredentialId()
+
+TYPE: Fido2NetLib.Objects.AttestationConveyancePreference
+  Base: Fido2NetLib.TypedString
+  Implements: System.IEquatable`1[[Fido2NetLib.TypedString, Fido2NetLib, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]
+  Method: AttestationConveyancePreference Parse(String value)
+
+TYPE: Fido2NetLib.Objects.AttestationType
+  Base: Fido2NetLib.TypedString
+  Implements: System.IEquatable`1[[Fido2NetLib.TypedString, Fido2NetLib, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]
+
+TYPE: Fido2NetLib.Objects.AttestationVerificationSuccess
+  Property: AttestationType AttestationType
+  Property: Byte[] CredentialId
+  Property: Byte[] PublicKey
+  Property: Byte[][] TrustPath
+  Property: User User
+  Method: AttestationType get_AttestationType()
+  Method: Byte[] get_CredentialId()
+  Method: Byte[] get_PublicKey()
+  Method: Byte[][] get_TrustPath()
+  Method: User get_User()
+  Method: Void set_AttestationType(AttestationType value)
+  Method: Void set_CredentialId(Byte[] value)
+  Method: Void set_PublicKey(Byte[] value)
+  Method: Void set_TrustPath(Byte[][] value)
+  Method: Void set_User(User value)
+
+TYPE: Fido2NetLib.Objects.AuthenticatorAttachment
+  Base: Fido2NetLib.TypedString
+  Implements: System.IEquatable`1[[Fido2NetLib.TypedString, Fido2NetLib, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]
+
+TYPE: Fido2NetLib.Objects.AuthenticatorTransport
+  Base: Fido2NetLib.TypedString
+  Implements: System.IEquatable`1[[Fido2NetLib.TypedString, Fido2NetLib, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]
+
+TYPE: Fido2NetLib.Objects.IsCredentialIdUniqueToUserParams
+  Property: Byte[] CredentialId
+  Property: User User
+  Method: Byte[] get_CredentialId()
+  Method: User get_User()
+  Method: Void set_CredentialId(Byte[] value)
+  Method: Void set_User(User value)
+
+TYPE: Fido2NetLib.Objects.IsUserHandleOwnerOfCredentialIdParams
+  Property: Byte[] CredentialId
+  Property: Byte[] UserHandle
+  Method: Byte[] get_CredentialId()
+  Method: Byte[] get_UserHandle()
+
+TYPE: Fido2NetLib.Objects.PublicKeyCredentialDescriptor
+  Property: Byte[] Id
+  Property: AuthenticatorTransport[] Transports
+  Property: String Type
+  Method: Byte[] get_Id()
+  Method: AuthenticatorTransport[] get_Transports()
+  Method: String get_Type()
+  Method: Void set_Id(Byte[] value)
+  Method: Void set_Transports(AuthenticatorTransport[] value)
+  Method: Void set_Type(String value)
+
+TYPE: Fido2NetLib.Objects.UserVerificationRequirement
+  Base: Fido2NetLib.TypedString
+  Implements: System.IEquatable`1[[Fido2NetLib.TypedString, Fido2NetLib, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]
+
+TYPE: Fido2NetLib.PubArea
+  Property: Byte[] Alg
+  Property: Byte[] Attributes
+  Property: Byte[] CurveID
+  Property: UInt32 Exponent
+  Property: Byte[] KDF
+  Property: Byte[] KeyBits
+  Property: Byte[] Policy
+  Property: Byte[] Raw
+  Property: Byte[] Scheme
+  Property: Byte[] Symmetric
+  Property: Byte[] Type
+  Property: Byte[] Unique
+  Method: Byte[] get_Alg()
+  Method: Byte[] get_Attributes()
+  Method: Byte[] get_CurveID()
+  Method: UInt32 get_Exponent()
+  Method: Byte[] get_KDF()
+  Method: Byte[] get_KeyBits()
+  Method: Byte[] get_Policy()
+  Method: Byte[] get_Raw()
+  Method: Byte[] get_Scheme()
+  Method: Byte[] get_Symmetric()
+  Method: Byte[] get_Type()
+  Method: Byte[] get_Unique()
+
+TYPE: Fido2NetLib.PubKeyCredParam
+  Property: Int64 Alg
+  Property: String Type
+  Method: Int64 get_Alg()
+  Method: String get_Type()
+  Method: Void set_Alg(Int64 value)
+  Method: Void set_Type(String value)
+
+TYPE: Fido2NetLib.Rp
+  Property: String Id
+  Property: String Name
+  Method: String get_Id()
+  Method: String get_Name()
+  Method: Void set_Id(String value)
+  Method: Void set_Name(String value)
+
+TYPE: Fido2NetLib.TokenBindingDto
+  Property: String Id
+  Property: String Status
+  Method: String get_Id()
+  Method: String get_Status()
+  Method: Void set_Id(String value)
+  Method: Void set_Status(String value)
+  Method: Void Verify(Byte[] requestTokenbinding)
+
+TYPE: Fido2NetLib.ToStringJsonConverter
+  Base: Newtonsoft.Json.JsonConverter
+  Method: Boolean CanConvert(Type objectType)
+  Method: Object ReadJson(JsonReader reader, Type objectType, Object existingValue, JsonSerializer serializer)
+  Method: Void WriteJson(JsonWriter writer, Object value, JsonSerializer serializer)
+
+TYPE: Fido2NetLib.TpmAlg
+  Base: System.Enum
+  Implements: System.IComparable, System.ISpanFormattable, System.IFormattable, System.IConvertible
+
+TYPE: Fido2NetLib.TypedString
+  Implements: System.IEquatable`1[[Fido2NetLib.TypedString, Fido2NetLib, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null]]
+  Property: String Value
+  Method: Boolean Equals(TypedString other)
+  Method: Boolean Equals(Object obj)
+  Method: String get_Value()
+  Method: Int32 GetHashCode()
+  Method: Boolean op_Equality(TypedString e1, TypedString e2)
+  Method: String op_Implicit(TypedString op)
+  Method: Boolean op_Inequality(TypedString e1, TypedString e2)
+  Method: String ToString()
+
+TYPE: Fido2NetLib.User
+  Property: String DisplayName
+  Property: Byte[] Id
+  Property: String Name
+  Method: String get_DisplayName()
+  Method: Byte[] get_Id()
+  Method: String get_Name()
+  Method: Void set_DisplayName(String value)
+  Method: Void set_Id(Byte[] value)
+  Method: Void set_Name(String value)

@@ -50,8 +50,10 @@ using (var scope = app.Services.CreateScope())
         new AuthTest.Api.Models.User { Username = "virginie",  PasswordHash = BCrypt.Net.BCrypt.HashPassword("Pas$word2", 12), MustChangePassword = true }
     };
     foreach (var u in seedUsers)
+    {
         if (!db.Users.Any(x => x.Username.ToLower() == u.Username.ToLower()))
             db.Users.Add(u);
+    }
     db.SaveChanges();
 }
 
