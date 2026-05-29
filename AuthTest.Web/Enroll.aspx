@@ -64,14 +64,18 @@
           }
 
           var attestation = await navigator.credentials.create({ publicKey: options });
+          var transports = attestation.response.getTransports ? attestation.response.getTransports() : [];
+          var clientExts = attestation.getClientExtensionResults ? attestation.getClientExtensionResults() : {};
           var resp = {
             id: bufToB64url(attestation.rawId),
             rawId: bufToB64url(attestation.rawId),
             type: attestation.type,
             response: {
               attestationObject: bufToB64url(attestation.response.attestationObject),
-              clientDataJSON: bufToB64url(attestation.response.clientDataJSON)
-            }
+              clientDataJSON: bufToB64url(attestation.response.clientDataJSON),
+              transports: transports
+            },
+            clientExtensionResults: clientExts
           };
           document.getElementById('<%= hdnAttestationResponse.ClientID %>').value = JSON.stringify(resp);
           document.getElementById('<%= btnRegisterComplete.ClientID %>').click();

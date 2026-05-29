@@ -56,8 +56,15 @@ namespace AuthTest.Web
                 var result = await ApiClient.PostAsync<Dictionary<string, object>>("webauthn/register/complete",
                     new { token = SessionHelper.SessionToken, keyName, attestationResponse });
 
-                bool success = result.ContainsKey("success") && (bool)result["success"];
-                if (!success) { lblRegisterError.Text = result.ContainsKey("error") ? result["error"]?.ToString() : "Erreur d'enrôlement."; return; }
+                bool success = result.ContainsKey("success") && result["success"] is bool b && b;
+                if (!success)
+                {
+                    string errMsg = result.ContainsKey("error") ? result["error"]?.ToString()
+                        : result.ContainsKey("title") ? result["title"]?.ToString()
+                        : "Erreur d'enrôlement.";
+                    lblRegisterError.Text = errMsg;
+                    return;
+                }
 
                 SessionHelper.IsEnrolled = true;
                 Response.Redirect("Users.aspx");
