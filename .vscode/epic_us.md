@@ -165,3 +165,34 @@ En tant que PO, je veux vérifier les parcours bout en bout.
 2. Parcours user avec 2FA validé (connexion WebAuthn).
 3. Parcours reset 2FA validé (retour `hasWebAuthn=false`).
 4. Accès applicatif bloqué avant enrôlement validé.
+
+
+## Tableau de synthèse - Complexité par Epic (profil senior 8-10 ans)
+
+| Epic | Complexité | Estimation (jours ouvrés) | Risque principal | Dépendances clés |
+|---|---|---:|---|---|
+| Epic 1 - Fondations 2FA WebAuthn (Backend) | Medium | 1.5 à 2.5 | Mauvais mapping modèle <-> objets WebAuthn | Aucune (point de départ) |
+| Epic 2 - Enrôlement obligatoire si 2FA absente | High | 2.5 à 4 | Orchestration du flow obligatoire + challenge state | Epic 1 |
+| Epic 3 - Connexion avec 2FA existante | High | 2 à 3.5 | Validation assertion + comportements navigateur/device | Epic 1, Epic 2 (partiel) |
+| Epic 4 - Reset 2FA et comportement post-reset | Medium | 1 à 1.5 | Incohérences d état hasWebAuthn après reset | Epic 1, Epic 2 |
+| Epic 5 - Frontend WebForms (parcours utilisateur) | High | 3 à 5 | Gestion d état multi-étapes dans WebForms | Epic 2, Epic 3, Epic 4 |
+| Epic 6 - Sécurité technique et intégration | Medium | 1 à 2 | CORS / API key / configs locales | Epic 1 (et en parallèle partiel des autres) |
+| Epic 7 - Tests et validation E2E | Medium/High | 2 à 3.5 | Couverture réelle des parcours + stabilité des tests | Tous les epics précédents |
+
+### Totaux projet
+
+| Scénario | Charge totale |
+|---|---:|
+| Optimiste | 13.5 j |
+| Réaliste | 18 à 22 j |
+| Prudent (aléas WebAuthn) | ~25 j |
+
+### Priorisation recommandée (ordre d exécution)
+
+1. Epic 1
+2. Epic 2
+3. Epic 3
+4. Epic 4
+5. Epic 5
+6. Epic 6 (peut démarrer en parallèle partiel)
+7. Epic 7
