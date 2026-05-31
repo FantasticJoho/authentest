@@ -2,6 +2,7 @@
 <!DOCTYPE html>
 <html>
 <head runat="server">
+  <meta charset="utf-8" />
   <title>Connexion</title>
   <style>
     body { font-family: sans-serif; max-width: 400px; margin: 60px auto; }

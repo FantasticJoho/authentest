@@ -2,6 +2,7 @@
 <!DOCTYPE html>
 <html>
 <head runat="server">
+  <meta charset="utf-8" />
   <title>Utilisateurs</title>
   <style>
     body { font-family: sans-serif; max-width: 900px; margin: 40px auto; }
