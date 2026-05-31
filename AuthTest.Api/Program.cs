@@ -35,7 +35,7 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
     });
 builder.Services.AddSingleton<SessionStore>();
-builder.Services.AddSingleton<ChallengeStore>();
+builder.Services.AddScoped<ChallengeStore>();
 
 var app = builder.Build();
 
@@ -60,3 +60,5 @@ app.UseMiddleware<ApiKeyMiddleware>();
 app.MapControllers();
 
 app.Run();
+
+public partial class Program { }

@@ -9,6 +9,7 @@ public class AppDbContext : DbContext
 
     public DbSet<User> Users => Set<User>();
     public DbSet<WebAuthnCredential> Credentials => Set<WebAuthnCredential>();
+    public DbSet<WebAuthnChallenge> Challenges => Set<WebAuthnChallenge>();
 
     protected override void OnModelCreating(ModelBuilder mb)
     {

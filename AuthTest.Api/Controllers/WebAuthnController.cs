@@ -61,7 +61,7 @@ public class WebAuthnController : ControllerBase
             AttestationPreference = AttestationConveyancePreference.None
         });
 
-        _challenges.StoreRegisterOptions(req.Token, options);
+        await _challenges.StoreRegisterOptionsAsync(req.Token, options);
 
         return Ok(options);
     }
@@ -75,7 +75,7 @@ public class WebAuthnController : ControllerBase
         if (string.IsNullOrWhiteSpace(req.KeyName))
             return BadRequest(new { error = "KeyName is required" });
 
-        var storedOptions = _challenges.TakeRegisterOptions(req.Token);
+        var storedOptions = await _challenges.TakeRegisterOptionsAsync(req.Token);
         if (storedOptions is null) return BadRequest(new { error = "No pending challenge" });
 
         var user = await _db.Users.FindAsync(session.UserId);
@@ -136,7 +136,7 @@ public class WebAuthnController : ControllerBase
             UserVerification = UserVerificationRequirement.Preferred
         });
 
-        _challenges.StoreAssertOptions($"auth:{req.Username.ToLower()}", options);
+        await _challenges.StoreAssertOptionsAsync($"auth:{req.Username.ToLower()}", options);
 
         return Ok(options);
     }
@@ -151,7 +151,7 @@ public class WebAuthnController : ControllerBase
         if (user is null)
             return BadRequest(new { error = "User not found" });
 
-        var storedOptions = _challenges.TakeAssertOptions($"auth:{req.Username.ToLower()}");
+        var storedOptions = await _challenges.TakeAssertOptionsAsync($"auth:{req.Username.ToLower()}");
         if (storedOptions is null)
             return BadRequest(new { error = "No pending challenge" });
 

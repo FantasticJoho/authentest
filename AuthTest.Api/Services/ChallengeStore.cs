@@ -1,28 +1,81 @@
-using System.Collections.Concurrent;
+using AuthTest.Api.Data;
+using AuthTest.Api.Models;
 using Fido2NetLib;
+using Microsoft.EntityFrameworkCore;
 
 namespace AuthTest.Api.Services;
 
 public class ChallengeStore
 {
-    private readonly ConcurrentDictionary<string, CredentialCreateOptions> _registerOptions = new();
-    private readonly ConcurrentDictionary<string, AssertionOptions> _assertOptions = new();
+    private static readonly TimeSpan Ttl = TimeSpan.FromMinutes(2);
+    private readonly AppDbContext _db;
 
-    public void StoreRegisterOptions(string key, CredentialCreateOptions options) =>
-        _registerOptions[key] = options;
+    public ChallengeStore(AppDbContext db) => _db = db;
 
-    public CredentialCreateOptions? TakeRegisterOptions(string key)
+    public async Task StoreRegisterOptionsAsync(string key, CredentialCreateOptions options)
     {
-        _registerOptions.TryRemove(key, out var opts);
-        return opts;
+        await PurgeExpiredAsync();
+        var existing = await _db.Challenges
+            .Where(c => c.Key == key && c.Type == "register")
+            .ToListAsync();
+        _db.Challenges.RemoveRange(existing);
+        _db.Challenges.Add(new WebAuthnChallenge
+        {
+            Key = key,
+            Type = "register",
+            OptionsJson = options.ToJson(),
+            ExpiresAt = DateTime.UtcNow.Add(Ttl)
+        });
+        await _db.SaveChangesAsync();
     }
 
-    public void StoreAssertOptions(string key, AssertionOptions options) =>
-        _assertOptions[key] = options;
-
-    public AssertionOptions? TakeAssertOptions(string key)
+    public async Task<CredentialCreateOptions?> TakeRegisterOptionsAsync(string key)
     {
-        _assertOptions.TryRemove(key, out var opts);
-        return opts;
+        var row = await _db.Challenges
+            .FirstOrDefaultAsync(c => c.Key == key && c.Type == "register" && c.ExpiresAt > DateTime.UtcNow);
+        if (row is null) return null;
+        _db.Challenges.Remove(row);
+        await _db.SaveChangesAsync();
+        return CredentialCreateOptions.FromJson(row.OptionsJson);
+    }
+
+    public async Task StoreAssertOptionsAsync(string key, AssertionOptions options)
+    {
+        await PurgeExpiredAsync();
+        var existing = await _db.Challenges
+            .Where(c => c.Key == key && c.Type == "assert")
+            .ToListAsync();
+        _db.Challenges.RemoveRange(existing);
+        _db.Challenges.Add(new WebAuthnChallenge
+        {
+            Key = key,
+            Type = "assert",
+            OptionsJson = options.ToJson(),
+            ExpiresAt = DateTime.UtcNow.Add(Ttl)
+        });
+        await _db.SaveChangesAsync();
+    }
+
+    public async Task<AssertionOptions?> TakeAssertOptionsAsync(string key)
+    {
+        var row = await _db.Challenges
+            .FirstOrDefaultAsync(c => c.Key == key && c.Type == "assert" && c.ExpiresAt > DateTime.UtcNow);
+        if (row is null) return null;
+        _db.Challenges.Remove(row);
+        await _db.SaveChangesAsync();
+        return AssertionOptions.FromJson(row.OptionsJson);
+    }
+
+    private async Task PurgeExpiredAsync()
+    {
+        var expired = await _db.Challenges
+            .Where(c => c.ExpiresAt <= DateTime.UtcNow)
+            .ToListAsync();
+        if (expired.Count > 0)
+        {
+            _db.Challenges.RemoveRange(expired);
+            await _db.SaveChangesAsync();
+        }
     }
 }
+
