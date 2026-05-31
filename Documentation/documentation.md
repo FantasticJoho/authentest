@@ -462,7 +462,104 @@ interprétait les bytes UTF-8 comme du Latin-1 (ISO-8859-1).
 
 ---
 
-## PARTIE 7 — RÉSUMÉ EN UNE PHRASE PAR CONCEPT
+## PARTIE 7 — VUE D'ENSEMBLE : ENDPOINTS, SERVICES ET TABLES
+
+Diagramme complet des 4 flux — chaque flèche indique l'endpoint appelé,
+la méthode de service ou la table EF touchée.
+
+```mermaid
+sequenceDiagram
+    actor U as Utilisateur
+    participant W as WebForms
+    participant A as API Endpoint
+    participant S as Service C#
+    participant DB as Table EF InMemory
+
+    rect rgb(230, 240, 255)
+        Note over U,DB: LOGIN MOT DE PASSE
+
+        U->>W: Saisit username
+        W->>A: POST /auth/check
+        A->>DB: Users (SELECT WHERE Username)
+        A->>DB: Credentials (COUNT WHERE UserId)
+        A-->>W: { exists, hasWebAuthn, mustChangePassword }
+
+        U->>W: Saisit mot de passe
+        W->>A: POST /auth/login
+        A->>DB: Users + Credentials (SELECT)
+        Note over A: BCrypt.Verify(password, PasswordHash)
+        A->>S: SessionStore.CreateSession(userId)
+        A-->>W: { success, token, mustChangePassword }
+
+        U->>W: Saisit nouveau mot de passe
+        W->>A: POST /auth/change-password
+        A->>S: SessionStore.GetSession(token)
+        A->>DB: Users (UPDATE PasswordHash, MustChangePassword=false)
+        A-->>W: { success }
+    end
+
+    rect rgb(230, 255, 230)
+        Note over U,DB: ENRÔLEMENT WEBAUTHN
+
+        W->>A: POST /webauthn/register/begin
+        A->>S: SessionStore.GetSession(token)
+        A->>DB: Users (SELECT WHERE Id)
+        A->>DB: Credentials (SELECT WHERE UserId — liste d'exclusion)
+        Note over A: Fido2.RequestNewCredential(user, excludeList)
+        A->>S: ChallengeStore.StoreRegisterOptionsAsync(token, options)
+        A->>DB: WebAuthnChallenges (INSERT Key=token, Type="register", ExpiresAt=+2min)
+        A-->>W: CredentialCreateOptions { challenge, rp, user, pubKeyCredParams }
+
+        W->>U: navigator.credentials.create(options)
+        U-->>W: AttestationResponse { attestationObject, clientDataJSON }
+
+        W->>A: POST /webauthn/register/complete
+        A->>S: SessionStore.GetSession(token)
+        A->>S: ChallengeStore.TakeRegisterOptionsAsync(token)
+        A->>DB: WebAuthnChallenges (SELECT WHERE Key=token AND ExpiresAt>now, puis DELETE)
+        Note over A: Fido2.MakeNewCredentialAsync(attestationResponse, storedOptions)<br/>vérifie challenge + origin + rpId + signature
+        A->>DB: Credentials (INSERT CredentialId, PublicKey, SignCount=0, Name, UserId)
+        A->>S: SessionStore.MarkEnrolled(token)
+        A-->>W: { success }
+    end
+
+    rect rgb(255, 245, 220)
+        Note over U,DB: RECONNEXION WEBAUTHN
+
+        W->>A: POST /webauthn/authenticate/begin
+        A->>DB: Users + Credentials (SELECT WHERE Username)
+        Note over A: Fido2.GetAssertionOptions(allowedKeys)
+        A->>S: ChallengeStore.StoreAssertOptionsAsync("auth:username", options)
+        A->>DB: WebAuthnChallenges (INSERT Key="auth:username", Type="assert", ExpiresAt=+2min)
+        A-->>W: AssertionOptions { challenge, allowCredentials }
+
+        W->>U: navigator.credentials.get(options)
+        U-->>W: AssertionResponse { authenticatorData, clientDataJSON, signature }
+
+        W->>A: POST /webauthn/authenticate/complete
+        A->>DB: Users + Credentials (SELECT WHERE Username)
+        A->>S: ChallengeStore.TakeAssertOptionsAsync("auth:username")
+        A->>DB: WebAuthnChallenges (SELECT WHERE Key AND ExpiresAt>now, puis DELETE)
+        Note over A: Fido2.MakeAssertionAsync(assertionResponse, storedOptions, publicKey, signCount)<br/>vérifie signature + challenge + origin + signCount
+        A->>DB: Credentials (UPDATE SignCount)
+        A->>S: SessionStore.CreateSession(userId, enrolled=true)
+        A-->>W: { success, token }
+    end
+
+    rect rgb(255, 225, 225)
+        Note over U,DB: RESET 2FA
+
+        W->>A: POST /users/{id}/reset-2fa
+        A->>DB: Users + Credentials (SELECT WHERE Id)
+        A->>DB: Credentials (DELETE WHERE UserId)
+        A-->>W: { success }
+        Note over W,DB: Prochain /auth/check → hasWebAuthn=false<br/>Le flow "Premier login" redémarre
+    end
+```
+
+---
+
+## PARTIE 8 — RÉSUMÉ EN UNE PHRASE PAR CONCEPT
 
 | Concept        | Définition |
 |----------------|-----------|
