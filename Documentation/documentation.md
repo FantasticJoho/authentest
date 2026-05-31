@@ -172,21 +172,74 @@ PARTIE 5 — POINTS D'ATTENTION DÉVELOPPÉS
     par une vraie base SQL (PostgreSQL, SQL Server, etc.)
 
 
-⚠️  POINT 2 : ChallengeStore en mémoire — une seule instance
-    -------------------------------------------------------
-    Les challenges (nonces) sont stockés dans un Dictionary en mémoire C#
-    (classe ChallengeStore, Singleton injecté par DI).
-    
-    Problème si tu deploies sur plusieurs serveurs (load balancing) :
-      - Le begin peut être traité par le serveur A (qui stocke le challenge)
-      - Le complete peut arriver sur le serveur B (qui ne connaît pas le challenge)
-      - → Erreur "No pending challenge"
-    
-    Pour la production : utiliser Redis ou une table SQL pour les challenges.
-    
-    Autre subtilité : si l'utilisateur clique deux fois sur "Enregistrer une clé",
-    le deuxième begin écrase le challenge du premier. Le premier tentative sera
-    alors invalide. C'est acceptable en POC.
+⚠️  POINT 2 : ChallengeStore — vestiaire temporaire des défis cryptographiques
+     -------------------------------------------------------
+
+     QU'EST-CE QUE LE CHALLENGESTORE ?
+
+     WebAuthn fonctionne en deux allers-retours (begin -> complete).
+     Entre les deux, le serveur doit mémoriser le challenge qu'il a généré,
+     pour pouvoir vérifier la réponse du navigateur.
+
+     Exemple concret pour l'enrôlement :
+
+       begin   : API génère challenge "aGVsbG8=" -> le stocke -> l'envoie au browser
+       complete: browser renvoie une signature de "aGVsbG8="
+                 API récupère "aGVsbG8=" dans le store -> vérifie la signature -> OK
+
+     Sans ChallengeStore, le serveur aurait oublié ce qu'il a demandé,
+     et la vérification serait impossible.
+
+     IMPLÉMENTATION DANS CE PROJET
+
+     Le ChallengeStore est une classe C# (AuthTest.Api/Services/ChallengeStore.cs)
+     qui utilise EF Core InMemory pour stocker les challenges dans la même base
+     de données que les utilisateurs.
+
+     La table WebAuthnChallenge contient :
+       - Key        : identifiant du challenge (ex: token de session, "auth:jonathan")
+       - Type       : "register" (enrôlement) ou "assert" (authentification)
+       - OptionsJson: les options complètes sérialisées en JSON
+       - ExpiresAt  : date d'expiration (2 minutes après création)
+
+     TTL — Durée de vie de 2 minutes
+
+     Chaque challenge expire automatiquement après 2 minutes (TTL = Time To Live).
+     Pourquoi c'est important :
+       - Si quelqu'un intercepte le challenge, il ne peut pas l'utiliser plus tard
+       - L'utilisateur a 2 minutes pour poser son doigt sur le capteur
+       - A chaque Store*, les lignes expirées sont supprimées automatiquement
+
+     Code simplifié :
+
+       // Stocker un challenge (TTL 2 min)
+       db.Challenges.Add(new WebAuthnChallenge {
+           Key = tokenSession,
+           Type = "register",
+           OptionsJson = options.ToJson(),
+           ExpiresAt = DateTime.UtcNow.AddMinutes(2)   // le TTL
+       });
+
+       // Récupérer et consommer un challenge
+       var row = db.Challenges.FirstOrDefault(
+           c => c.Key == key && c.ExpiresAt > DateTime.UtcNow  // filtre TTL
+       );
+       if (row is null) return BadRequest("No pending challenge"); // expiré ou inexistant
+       db.Challenges.Remove(row);  // consommé -> ne peut plus être réutilisé
+
+     COMPORTEMENT SCOPED (pas Singleton)
+
+     ChallengeStore est enregistré en "Scoped" dans la DI (pas Singleton),
+     parce qu'il dépend de AppDbContext qui est lui-même Scoped.
+     Cela signifie qu'une nouvelle instance est créée à chaque requête HTTP.
+
+     Pour le multi-instance en production : remplacer UseInMemoryDatabase par
+     un vrai SQL (Oracle, PostgreSQL...). La logique du ChallengeStore
+     n'aurait PAS à changer, seul le provider EF change.
+
+     Autre subtilité : si l'utilisateur clique deux fois sur "Enregistrer une clé",
+     le deuxième begin écrase le challenge du premier (l'ancien est supprimé).
+     C'est acceptable en POC.
 
 
 ⚠️  POINT 3 : Sessions WebForms — pas de vraie authentification côté serveur
@@ -304,6 +357,7 @@ PARTIE 6 — RÉSUMÉ EN UNE PHRASE PAR CONCEPT
 -----------------------------------------------------------------------
 
   Challenge      = question secrète unique que seul ton authenticateur peut répondre
+  ChallengeStore = service qui mémorise temporairement le challenge entre /begin et /complete (TTL 2 min)
   CredentialId   = identifiant de ta clé (comme un numéro de carte)
   PublicKey      = cadenas que le serveur garde (ne sert qu'à vérifier)
   PrivateKey     = clé secrète dans ton appareil (ne sort JAMAIS)
