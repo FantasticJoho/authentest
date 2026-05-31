@@ -31,7 +31,7 @@ graph LR
     WF -->|"HTTP + X-Api-Key"| API
     API -->|"JSON responses"| WF
     WF -->|"navigator.credentials.create/get()"| BR
-    API -->|"Fido2NetLib 4.0.1"| DB
+    API -->|"Fido2 4.0.1"| DB
 ```
 
 ---
@@ -79,7 +79,7 @@ sequenceDiagram
 
     W->>A: POST /webauthn/register/complete { token, keyName, attestationResponse }
     A->>DB: Récupère et supprime le challenge (vérifie TTL)
-    Note over A: Fido2NetLib.MakeNewCredentialAsync() vérifie :<br/>challenge, origin, rpId, signature
+    Note over A: Fido2.MakeNewCredentialAsync() vérifie :<br/>challenge, origin, rpId, signature
     A->>DB: Stocke WebAuthnCredential { CredentialId, PublicKey, SignCount=0, Name }
     A-->>W: { success: true }
     W->>U: Redirige vers Users.aspx
@@ -87,7 +87,7 @@ sequenceDiagram
 
 ### Détail de l'étape d'enrôlement (4c)
 
-L'API vérifie avec Fido2NetLib :
+L'API vérifie avec Fido2 :
 1. Le challenge correspond bien à celui stocké en base
 2. L'origin est bien `http://localhost:8081`
 3. Le rpId est bien `localhost`
@@ -138,7 +138,7 @@ sequenceDiagram
     W->>A: POST /webauthn/authenticate/complete { username, assertionResponse }
     A->>DB: Récupère et supprime le challenge (vérifie TTL)
     A->>DB: Trouve le credential par rawId
-    Note over A: Fido2NetLib.MakeAssertionAsync() vérifie :<br/>signature, challenge, origin, signCount
+    Note over A: Fido2.MakeAssertionAsync() vérifie :<br/>signature, challenge, origin, signCount
     A->>DB: Met à jour SignCount
     A-->>W: { success: true, token }
     W->>W: Stocke token en Session ASP.NET
@@ -156,7 +156,7 @@ sequenceDiagram
 
 ## PARTIE 5 — COMMENT FIDO2NETLIB GÈRE LES CHALLENGES
 
-Fido2NetLib est la bibliothèque C# qui implémente le protocole WebAuthn côté serveur.
+Fido2 est la bibliothèque C# qui implémente le protocole WebAuthn côté serveur.
 Elle expose 4 méthodes principales, chacune liée à une étape du protocole.
 
 ```mermaid
@@ -203,7 +203,7 @@ var makeResult = await _fido2.MakeNewCredentialAsync(new MakeNewCredentialParams
 // makeResult.PublicKey → clé publique COSE à stocker en base
 ```
 
-Fido2NetLib vérifie en interne :
+Fido2 vérifie en interne :
 - Que `clientDataJSON.challenge` == challenge dans `OriginalOptions` → **anti-rejeu**
 - Que `clientDataJSON.origin` est dans la liste des origins autorisées → **anti-phishing**
 - Que `clientDataJSON.type` == `"webauthn.create"`
@@ -235,19 +235,19 @@ var result = await _fido2.MakeAssertionAsync(new MakeAssertionParams
 // result.SignCount → nouveau compteur à sauvegarder en base
 ```
 
-Fido2NetLib vérifie en interne :
+Fido2 vérifie en interne :
 - Que `clientDataJSON.challenge` == challenge dans `OriginalOptions` → **anti-rejeu**
 - Que `clientDataJSON.origin` est dans la liste autorisée → **anti-phishing**
 - Que `clientDataJSON.type` == `"webauthn.get"`
 - Que la **signature** dans `assertionResponse` est valide avec `StoredPublicKey`
 - Que `signCount > StoredSignatureCounter` (sauf si signCount == 0) → **anti-clonage**
 
-### Pourquoi le ChallengeStore est indispensable avec Fido2NetLib
+### Pourquoi le ChallengeStore est indispensable avec Fido2
 
 ```mermaid
 sequenceDiagram
     participant WC as WebAuthnController
-    participant F2 as Fido2NetLib
+    participant F2 as Fido2
     participant CS as ChallengeStore (EF InMemory)
     participant BR as Navigateur
 
@@ -378,7 +378,7 @@ Toujours vérifier la version du package dans `AuthTest.Api.csproj` :
 Normalement, `[FromBody]` dans un controller ASP.NET Core désérialise
 automatiquement le JSON du body de la requête.
 
-Mais `AuthenticatorAssertionRawResponse` (type Fido2NetLib) contient
+Mais `AuthenticatorAssertionRawResponse` (type Fido2) contient
 des tableaux de bytes encodés en base64url. Le désérialiseur par défaut
 de `System.Text.Json` ne sait pas les décoder correctement depuis
 du JSON "classique" envoyé par `JavaScriptSerializer` (côté WebForms).
@@ -386,7 +386,7 @@ du JSON "classique" envoyé par `JavaScriptSerializer` (côté WebForms).
 Solution dans ce projet :
 - On reçoit le body comme `JsonElement` (type générique)
 - On refait une désérialisation manuelle avec `PropertyNameCaseInsensitive = true`
-- Fido2NetLib gère lui-même le décodage base64url interne
+- Fido2 gère lui-même le décodage base64url interne
 
 ```csharp
 // Au lieu de :
@@ -572,4 +572,4 @@ sequenceDiagram
 | RpId            | Nom de domaine du site (`localhost` ici) |
 | Origin          | Adresse complète du site (`http://localhost:8081`) |
 | Token           | Badge temporaire après login réussi, valide pour cette session |
-| Fido2NetLib     | Bibliothèque C# qui implémente le protocole WebAuthn côté serveur |
+| Fido2     | Bibliothèque C# qui implémente le protocole WebAuthn côté serveur |
