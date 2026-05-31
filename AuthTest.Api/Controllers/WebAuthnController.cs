@@ -1,3 +1,4 @@
+using System.Text.Json;
 using AuthTest.Api.Data;
 using AuthTest.Api.Models;
 using AuthTest.Api.Services;
@@ -154,8 +155,23 @@ public class WebAuthnController : ControllerBase
         if (storedOptions is null)
             return BadRequest(new { error = "No pending challenge" });
 
+        AuthenticatorAssertionRawResponse assertionResponse;
+        try
+        {
+            var opts = new JsonSerializerOptions { PropertyNameCaseInsensitive = true };
+            assertionResponse = JsonSerializer.Deserialize<AuthenticatorAssertionRawResponse>(
+                req.AssertionResponse.GetRawText(), opts)!;
+        }
+        catch (Exception ex)
+        {
+            return BadRequest(new { error = "Failed to parse assertion: " + ex.Message });
+        }
+
+        if (assertionResponse?.RawId is null)
+            return BadRequest(new { error = "AssertionResponse.RawId is missing" });
+
         var credential = user.Credentials
-            .FirstOrDefault(c => c.CredentialId.SequenceEqual(req.AssertionResponse.RawId));
+            .FirstOrDefault(c => c.CredentialId.SequenceEqual(assertionResponse.RawId));
 
         if (credential is null)
             return BadRequest(new { error = "Credential not found" });
@@ -168,7 +184,7 @@ public class WebAuthnController : ControllerBase
         {
             var result = await _fido2.MakeAssertionAsync(new MakeAssertionParams
             {
-                AssertionResponse = req.AssertionResponse,
+                AssertionResponse = assertionResponse,
                 OriginalOptions = storedOptions,
                 StoredPublicKey = credential.PublicKey,
                 StoredSignatureCounter = credential.SignCount,
@@ -191,4 +207,4 @@ public class WebAuthnController : ControllerBase
 public record RegisterBeginRequest(string Token);
 public record RegisterCompleteRequest(string Token, string KeyName, AuthenticatorAttestationRawResponse AttestationResponse);
 public record AuthBeginRequest(string Username);
-public record AuthCompleteRequest(string Username, AuthenticatorAssertionRawResponse AssertionResponse);
+public record AuthCompleteRequest(string Username, JsonElement AssertionResponse);

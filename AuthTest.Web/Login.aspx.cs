@@ -83,15 +83,33 @@ namespace AuthTest.Web
             var assertionJson = hdnAssertionResponse.Value;
             if (string.IsNullOrEmpty(assertionJson)) { lblError.Text = "Réponse WebAuthn manquante."; pnlWebAuthn.Visible = true; return; }
 
-            var assertionResponse = Json.Deserialize<object>(assertionJson);
-            var result = await ApiClient.PostAsync<Dictionary<string, object>>("webauthn/authenticate/complete", new { username, assertionResponse });
+            try
+            {
+                var assertionResponse = Json.Deserialize<object>(assertionJson);
+                var result = await ApiClient.PostAsync<Dictionary<string, object>>("webauthn/authenticate/complete", new { username, assertionResponse });
 
-            bool success = result.ContainsKey("success") && (bool)result["success"];
-            if (!success) { lblError.Text = result.ContainsKey("error") ? result["error"]?.ToString() : "Échec WebAuthn."; pnlWebAuthn.Visible = true; return; }
+                if (result == null) { lblError.Text = "Réponse vide du serveur."; pnlWebAuthn.Visible = true; return; }
 
-            SessionHelper.SessionToken = result["token"]?.ToString();
-            SessionHelper.IsEnrolled = true;
-            Response.Redirect("Users.aspx");
+                bool success = result.ContainsKey("success") && result["success"] is bool b && b;
+                if (!success)
+                {
+                    string errMsg = result.ContainsKey("error") ? result["error"]?.ToString()
+                        : result.ContainsKey("title") ? result["title"]?.ToString()
+                        : "Échec WebAuthn.";
+                    lblError.Text = errMsg;
+                    pnlWebAuthn.Visible = true;
+                    return;
+                }
+
+                SessionHelper.SessionToken = result["token"]?.ToString();
+                SessionHelper.IsEnrolled = true;
+                Response.Redirect("Users.aspx");
+            }
+            catch (Exception ex)
+            {
+                lblError.Text = "Erreur : " + ex.Message;
+                pnlWebAuthn.Visible = true;
+            }
         }
     }
 }
