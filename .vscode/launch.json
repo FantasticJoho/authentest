@@ -1,0 +1,43 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Task: Start Dev (API + IIS Express)",
+            "type": "node-terminal",
+            "request": "launch",
+            "command": "echo Start task executed: API + IIS Express",
+            "preLaunchTask": "Start AuthTest Dev (API + IIS Express)"
+        },
+        {
+            "name": "Task: Start Dev (No Build)",
+            "type": "node-terminal",
+            "request": "launch",
+            "command": "echo Start task executed: No Build",
+            "preLaunchTask": "Start AuthTest Dev (No Build)"
+        },
+        {
+            "name": "Task: Start API Only",
+            "type": "node-terminal",
+            "request": "launch",
+            "command": "echo Start task executed: API Only",
+            "preLaunchTask": "Start API Only"
+        },
+        {
+            "name": "Task: Start WebForms Only",
+            "type": "node-terminal",
+            "request": "launch",
+            "command": "echo Start task executed: WebForms Only",
+            "preLaunchTask": "Start WebForms Only (IIS Express)"
+        },
+        {
+            "name": "Task: Stop Dev",
+            "type": "node-terminal",
+            "request": "launch",
+            "command": "echo Stop task executed",
+            "preLaunchTask": "Stop AuthTest Dev (API + IIS Express)"
+        }
+    ]
+}

@@ -166,6 +166,29 @@ En tant que PO, je veux vérifier les parcours bout en bout.
 3. Parcours reset 2FA validé (retour `hasWebAuthn=false`).
 4. Accès applicatif bloqué avant enrôlement validé.
 
+---
+
+### Epic 8 - Observabilite et exploitation
+**Objectif:** rendre le module WebAuthn exploitable en production (monitoring + disponibilite).
+
+#### US 8.1 - Metriques et alerting WebAuthn
+En tant qu equipe exploitation, je veux suivre les metriques critiques WebAuthn et recevoir des alertes en cas d anomalie.
+
+**Critères d acceptation**
+1. Les metriques minimum sont exposees: latence, taux d erreur, taux de succes, volume par endpoint.
+2. Les endpoints couverts incluent `webauthn/register/begin`, `webauthn/register/complete`, `webauthn/authenticate/begin`, `webauthn/authenticate/complete`.
+3. Des alertes sont configurees sur seuils (ex: hausse erreurs, baisse succes, latence elevee).
+4. Le runbook d investigation de base est documente.
+
+#### US 8.2 - Health checks, readiness, liveness
+En tant qu equipe plateforme, je veux des checks de sante pour piloter correctement le deploiement et la supervision.
+
+**Critères d acceptation**
+1. Un endpoint `health/live` indique si le process est vivant.
+2. Un endpoint `health/ready` indique si les dependances critiques sont disponibles (DB, cache/store challenge).
+3. Le deploiement supporte un mode sans coupure (rolling, blue/green, ou canary selon infra).
+4. Les checks sont integres aux probes de la plateforme d hebergement.
+
 
 ## Tableau de synthèse - Complexité par Epic (profil senior 8-10 ans)
 
