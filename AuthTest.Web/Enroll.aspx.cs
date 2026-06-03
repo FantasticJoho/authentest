@@ -25,9 +25,12 @@ namespace AuthTest.Web
         {
             try
             {
+                var username = SessionHelper.CurrentUsername;
+                if (string.IsNullOrWhiteSpace(username)) { Response.Redirect("Login.aspx"); return; }
+
                 var rpId = Request.Headers["Host"]?.Split(':')[0] ?? Request.Url?.Host;
                 var options = await ApiClient.PostAsync<object>("webauthn/register/begin",
-                    new { token = SessionHelper.SessionToken, rpId });
+                    new { username, rpId });
                 hdnCreationOptions.Value = Json.Serialize(options);
             }
             catch (Exception ex)
@@ -43,7 +46,8 @@ namespace AuthTest.Web
 
         private async Task RegisterCompleteAsync()
         {
-            if (string.IsNullOrWhiteSpace(SessionHelper.SessionToken)) { Response.Redirect("Login.aspx"); return; }
+            var username = SessionHelper.CurrentUsername;
+            if (string.IsNullOrWhiteSpace(username)) { Response.Redirect("Login.aspx"); return; }
 
             var keyName = txtKeyName.Text?.Trim();
             if (string.IsNullOrWhiteSpace(keyName)) { lblRegisterError.Text = "Le nom de clé est obligatoire."; return; }
@@ -56,7 +60,7 @@ namespace AuthTest.Web
                 var rpId = Request.Headers["Host"]?.Split(':')[0] ?? Request.Url?.Host;
                 var attestationResponse = Json.Deserialize<object>(attestationJson);
                 var result = await ApiClient.PostAsync<Dictionary<string, object>>("webauthn/register/complete",
-                    new { token = SessionHelper.SessionToken, keyName, attestationResponse, rpId });
+                    new { username, keyName, attestationResponse, rpId });
 
                 bool success = result.ContainsKey("success") && result["success"] is bool b && b;
                 if (!success)

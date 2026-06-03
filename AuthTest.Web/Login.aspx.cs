@@ -67,7 +67,6 @@ namespace AuthTest.Web
             bool success = result.ContainsKey("success") && (bool)result["success"];
             if (!success) { lblError.Text = result.ContainsKey("error") ? result["error"]?.ToString() : "Erreur de connexion."; pnlPassword.Visible = true; return; }
 
-            SessionHelper.SessionToken = result["token"]?.ToString();
             bool mustChange = result.ContainsKey("mustChangePassword") && (bool)result["mustChangePassword"];
             if (mustChange) Response.Redirect("ChangePassword.aspx");
             else Response.Redirect("Enroll.aspx");
@@ -103,7 +102,6 @@ namespace AuthTest.Web
                     return;
                 }
 
-                SessionHelper.SessionToken = result["token"]?.ToString();
                 SessionHelper.IsEnrolled = true;
                 Response.Redirect("Users.aspx");
             }

@@ -15,14 +15,12 @@ namespace AuthTest.Api.Controllers;
 public class WebAuthnController : ControllerBase
 {
     private readonly AppDbContext _db;
-    private readonly SessionStore _sessions;
     private readonly ChallengeStore _challenges;
     private readonly IConfiguration _configuration;
 
-    public WebAuthnController(AppDbContext db, SessionStore sessions, ChallengeStore challenges, IConfiguration configuration)
+    public WebAuthnController(AppDbContext db, ChallengeStore challenges, IConfiguration configuration)
     {
         _db = db;
-        _sessions = sessions;
         _challenges = challenges;
         _configuration = configuration;
     }
@@ -51,10 +49,8 @@ public class WebAuthnController : ControllerBase
         // PHASE 1 (enrollment): prepare CredentialCreateOptions and a fresh challenge.
         // The challenge is stored server-side and must be returned unchanged in /register/complete.
         var fido2 = CreateFido2(req.RpId);
-        var session = _sessions.GetSession(req.Token);
-        if (session is null) return Unauthorized(new { error = "Invalid session" });
-
-        var user = await _db.Users.FindAsync(session.UserId);
+        var user = await _db.Users
+            .FirstOrDefaultAsync(u => u.Username.ToLower() == req.Username.ToLower());
         if (user is null) return NotFound();
 
         var fidoUser = new Fido2User
@@ -84,7 +80,7 @@ public class WebAuthnController : ControllerBase
         });
 
         // Challenge is temporary (TTL managed by ChallengeStore).
-        await _challenges.StoreRegisterOptionsAsync(req.Token, options);
+        await _challenges.StoreRegisterOptionsAsync($"reg:{req.Username.ToLower()}", options);
 
         return Ok(options);
     }
@@ -95,16 +91,15 @@ public class WebAuthnController : ControllerBase
         // PHASE 2 (enrollment): verify attestation with the exact options/challenge from phase 1,
         // then persist the new credential public data.
         var fido2 = CreateFido2(req.RpId);
-        var session = _sessions.GetSession(req.Token);
-        if (session is null) return Unauthorized(new { error = "Invalid session" });
 
         if (string.IsNullOrWhiteSpace(req.KeyName))
             return BadRequest(new { error = "KeyName is required" });
 
-        var storedOptions = await _challenges.TakeRegisterOptionsAsync(req.Token);
+        var storedOptions = await _challenges.TakeRegisterOptionsAsync($"reg:{req.Username.ToLower()}");
         if (storedOptions is null) return BadRequest(new { error = "No pending challenge" });
 
-        var user = await _db.Users.FindAsync(session.UserId);
+        var user = await _db.Users
+            .FirstOrDefaultAsync(u => u.Username.ToLower() == req.Username.ToLower());
         if (user is null) return NotFound();
 
         // Enforces that a credential ID cannot be registered twice.
@@ -122,7 +117,7 @@ public class WebAuthnController : ControllerBase
 
             var credential = new WebAuthnCredential
             {
-                UserId = session.UserId,
+                UserId = user.Id,
                 Name = req.KeyName,
                 CredentialId = makeResult.Id,
                 PublicKey = makeResult.PublicKey,
@@ -132,9 +127,6 @@ public class WebAuthnController : ControllerBase
 
             _db.Credentials.Add(credential);
             await _db.SaveChangesAsync();
-
-            // Marks this session as WebAuthn-enrolled so UI can unlock protected screens.
-            _sessions.MarkEnrolled(req.Token);
 
             return Ok(new { success = true });
         }
@@ -231,9 +223,7 @@ public class WebAuthnController : ControllerBase
             credential.SignCount = result.SignCount;
             await _db.SaveChangesAsync();
 
-            // Create a standard app session token after successful WebAuthn verification.
-            var token = _sessions.CreateSession(user.Id, true);
-            return Ok(new { success = true, token });
+            return Ok(new { success = true });
         }
         catch (Exception ex)
         {
@@ -242,7 +232,7 @@ public class WebAuthnController : ControllerBase
     }
 }
 
-public record RegisterBeginRequest(string Token, string? RpId);
-public record RegisterCompleteRequest(string Token, string KeyName, AuthenticatorAttestationRawResponse AttestationResponse, string? RpId);
+public record RegisterBeginRequest(string Username, string? RpId);
+public record RegisterCompleteRequest(string Username, string KeyName, AuthenticatorAttestationRawResponse AttestationResponse, string? RpId);
 public record AuthBeginRequest(string Username, string? RpId);
 public record AuthCompleteRequest(string Username, JsonElement AssertionResponse, string? RpId);

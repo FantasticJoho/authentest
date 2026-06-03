@@ -56,19 +56,19 @@ sequenceDiagram
 
     U->>W: Saisit son mot de passe
     W->>A: POST /auth/login { username, password }
-    A-->>W: { success: true, token, mustChangePassword: true }
-    W->>W: Stocke token en Session ASP.NET
+    A-->>W: { success: true, mustChangePassword: true }
+    W->>W: Stocke username en Session ASP.NET
     W->>U: Redirige vers ChangePassword.aspx
 
     U->>W: Saisit nouveau mot de passe
-    W->>A: POST /auth/change-password { token, newPassword }
+    W->>A: POST /auth/change-password { username, newPassword }
     A->>DB: Met à jour le hash + mustChangePassword = false
     A-->>W: { success: true }
     W->>U: Redirige vers Enroll.aspx
 
     Note over W,A: Enrôlement WebAuthn (begin → complete)
 
-    W->>A: POST /webauthn/register/begin { token }
+    W->>A: POST /webauthn/register/begin { username, rpId }
     A->>DB: Stocke challenge dans ChallengeStore (TTL 2 min)
     A-->>W: CredentialCreateOptions { challenge, rp, user, ... }
 
@@ -77,7 +77,7 @@ sequenceDiagram
     U->>OS: Valide avec biométrie
     OS-->>W: AuthenticatorAttestationResponse { attestationObject, clientDataJSON }
 
-    W->>A: POST /webauthn/register/complete { token, keyName, attestationResponse }
+    W->>A: POST /webauthn/register/complete { username, keyName, attestationResponse, rpId }
     A->>DB: Récupère et supprime le challenge (vérifie TTL)
     Note over A: Fido2.MakeNewCredentialAsync() vérifie :<br/>challenge, origin, rpId, signature
     A->>DB: Stocke WebAuthnCredential { CredentialId, PublicKey, SignCount=0, Name }
@@ -140,8 +140,8 @@ sequenceDiagram
     A->>DB: Trouve le credential par rawId
     Note over A: Fido2.MakeAssertionAsync() vérifie :<br/>signature, challenge, origin, signCount
     A->>DB: Met à jour SignCount
-    A-->>W: { success: true, token }
-    W->>W: Stocke token en Session ASP.NET
+    A-->>W: { success: true }
+    W->>W: Marque la session front comme enrôlée
     W->>U: Redirige vers Users.aspx
 ```
 
@@ -339,19 +339,23 @@ le deuxième begin écrase le challenge du premier (l'ancien est supprimé).
 C'est acceptable en POC.
 
 
-### ⚠️ POINT 3 : Sessions WebForms — pas de vraie authentification côté serveur
+### ⚠️ POINT 3 : Session front uniquement (API stateless utilisateur)
 
-Le token renvoyé par l'API (une chaîne aléatoire) est stocké dans la
-Session ASP.NET (mémoire serveur IIS Express).
+La session ASP.NET WebForms stocke le contexte UX (`Username`, `IsEnrolled`).
+L'API fonctionne en mode stateless pour l'état utilisateur.
+
+Exemple côté front :
 
 ```csharp
-SessionHelper.SessionToken = result["token"]?.ToString();
+SessionHelper.CurrentUsername = username;
+SessionHelper.IsEnrolled = true;
 ```
 
-Ce token est renvoyé à chaque appel API pour identifier l'utilisateur.
-Côté API, le `SessionStore` vérifie ce token.
+Les appels API portent l'identité fonctionnelle nécessaire dans le body
+(`username`, `rpId`) et les challenges WebAuthn restent gérés avec TTL court
+dans `ChallengeStore`.
 
-> ⚡ Risque : si le serveur WebForms redémarre, la session est perdue et
+> ⚡ Risque : si le serveur WebForms redémarre, la session front est perdue et
 > l'utilisateur doit se reconnecter. C'est normal pour un POC.
 
 
@@ -488,12 +492,10 @@ sequenceDiagram
         W->>A: POST /auth/login
         A->>DB: Users + Credentials (SELECT)
         Note over A: BCrypt.Verify(password, PasswordHash)
-        A->>S: SessionStore.CreateSession(userId)
-        A-->>W: { success, token, mustChangePassword }
+        A-->>W: { success, mustChangePassword }
 
         U->>W: Saisit nouveau mot de passe
         W->>A: POST /auth/change-password
-        A->>S: SessionStore.GetSession(token)
         A->>DB: Users (UPDATE PasswordHash, MustChangePassword=false)
         A-->>W: { success }
     end
@@ -502,24 +504,21 @@ sequenceDiagram
         Note over U,DB: ENRÔLEMENT WEBAUTHN
 
         W->>A: POST /webauthn/register/begin
-        A->>S: SessionStore.GetSession(token)
-        A->>DB: Users (SELECT WHERE Id)
+        A->>DB: Users (SELECT WHERE Username)
         A->>DB: Credentials (SELECT WHERE UserId — liste d'exclusion)
         Note over A: Fido2.RequestNewCredential(user, excludeList)
-        A->>S: ChallengeStore.StoreRegisterOptionsAsync(token, options)
-        A->>DB: WebAuthnChallenges (INSERT Key=token, Type="register", ExpiresAt=+2min)
+        A->>S: ChallengeStore.StoreRegisterOptionsAsync("reg:username", options)
+        A->>DB: WebAuthnChallenges (INSERT Key="reg:username", Type="register", ExpiresAt=+2min)
         A-->>W: CredentialCreateOptions { challenge, rp, user, pubKeyCredParams }
 
         W->>U: navigator.credentials.create(options)
         U-->>W: AttestationResponse { attestationObject, clientDataJSON }
 
         W->>A: POST /webauthn/register/complete
-        A->>S: SessionStore.GetSession(token)
-        A->>S: ChallengeStore.TakeRegisterOptionsAsync(token)
-        A->>DB: WebAuthnChallenges (SELECT WHERE Key=token AND ExpiresAt>now, puis DELETE)
+        A->>S: ChallengeStore.TakeRegisterOptionsAsync("reg:username")
+        A->>DB: WebAuthnChallenges (SELECT WHERE Key="reg:username" AND ExpiresAt>now, puis DELETE)
         Note over A: Fido2.MakeNewCredentialAsync(attestationResponse, storedOptions)<br/>vérifie challenge + origin + rpId + signature
         A->>DB: Credentials (INSERT CredentialId, PublicKey, SignCount=0, Name, UserId)
-        A->>S: SessionStore.MarkEnrolled(token)
         A-->>W: { success }
     end
 
@@ -542,8 +541,7 @@ sequenceDiagram
         A->>DB: WebAuthnChallenges (SELECT WHERE Key AND ExpiresAt>now, puis DELETE)
         Note over A: Fido2.MakeAssertionAsync(assertionResponse, storedOptions, publicKey, signCount)<br/>vérifie signature + challenge + origin + signCount
         A->>DB: Credentials (UPDATE SignCount)
-        A->>S: SessionStore.CreateSession(userId, enrolled=true)
-        A-->>W: { success, token }
+        A-->>W: { success }
     end
 
     rect rgb(255, 225, 225)
@@ -569,7 +567,6 @@ sequenceDiagram
 | PublicKey       | Cadenas que le serveur garde (ne sert qu'à vérifier) |
 | PrivateKey      | Clé secrète dans ton appareil (ne sort JAMAIS) |
 | SignCount       | Compteur pour détecter si ta clé a été copiée |
-| RpId            | Nom de domaine du site (`localhost` ici) |
-| Origin          | Adresse complète du site (`http://localhost:8081`) |
-| Token           | Badge temporaire après login réussi, valide pour cette session |
+| RpId            | Nom de domaine du site (ex: `localhost` ou `test.joho`) |
+| Origin          | Adresse complète du site (ex: `https://localhost:8081`) |
 | Fido2     | Bibliothèque C# qui implémente le protocole WebAuthn côté serveur |

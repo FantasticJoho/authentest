@@ -4,12 +4,6 @@ namespace AuthTest.Web
 {
     public static class SessionHelper
     {
-        public static string SessionToken
-        {
-            get => HttpContext.Current.Session["SessionToken"] as string;
-            set => HttpContext.Current.Session["SessionToken"] = value;
-        }
-
         public static string CurrentUsername
         {
             get => HttpContext.Current.Session["Username"] as string;
@@ -22,7 +16,7 @@ namespace AuthTest.Web
             set => HttpContext.Current.Session["Enrolled"] = value;
         }
 
-        public static bool IsAuthenticated => !string.IsNullOrEmpty(SessionToken);
+        public static bool IsAuthenticated => !string.IsNullOrEmpty(CurrentUsername);
 
         public static void Clear()
         {

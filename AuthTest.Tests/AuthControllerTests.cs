@@ -13,8 +13,7 @@ public class AuthControllerTests
     private static (AuthController ctrl, AppDbContext db) Build(string? dbName = null)
     {
         var db = DbHelper.CreateContext(dbName);
-        var sessions = new SessionStore();
-        return (new AuthController(db, sessions), db);
+        return (new AuthController(db), db);
     }
 
     // ── Check ─────────────────────────────────────────────────────────────
@@ -45,7 +44,7 @@ public class AuthControllerTests
     // ── Login ─────────────────────────────────────────────────────────────
 
     [Fact]
-    public async Task Login_CorrectCredentials_ReturnsSuccessWithToken()
+    public async Task Login_CorrectCredentials_ReturnsSuccess()
     {
         var (ctrl, db) = Build();
         db.Users.Add(new User
@@ -58,7 +57,6 @@ public class AuthControllerTests
         var result = (OkObjectResult)await ctrl.Login(new LoginRequest("alice", "secret"));
         var body = (LoginResponse)result.Value!;
         Assert.True(body.Success);
-        Assert.NotNull(body.Token);
     }
 
     [Fact]
@@ -75,7 +73,6 @@ public class AuthControllerTests
         var result = (OkObjectResult)await ctrl.Login(new LoginRequest("alice", "wrong"));
         var body = (LoginResponse)result.Value!;
         Assert.False(body.Success);
-        Assert.Null(body.Token);
     }
 
     [Fact]
@@ -90,19 +87,16 @@ public class AuthControllerTests
     // ── ChangePassword ────────────────────────────────────────────────────
 
     [Fact]
-    public async Task ChangePassword_ValidSession_UpdatesPasswordAndMustChangeFlag()
+    public async Task ChangePassword_ValidUser_UpdatesPasswordAndMustChangeFlag()
     {
         var db = DbHelper.CreateContext();
-        var sessions = new SessionStore();
-        var ctrl = new AuthController(db, sessions);
+        var ctrl = new AuthController(db);
 
         var user = new User { Username = "bob", PasswordHash = BCrypt.Net.BCrypt.HashPassword("old", 4), MustChangePassword = true };
         db.Users.Add(user);
         await db.SaveChangesAsync();
 
-        var token = sessions.CreateSession(user.Id, false);
-
-        var result = await ctrl.ChangePassword(new ChangePasswordRequest(token, "newpass"));
+        var result = await ctrl.ChangePassword(new ChangePasswordRequest(user.Username, "newpass"));
         Assert.IsType<OkObjectResult>(result);
 
         var updated = await db.Users.FindAsync(user.Id);
@@ -111,10 +105,10 @@ public class AuthControllerTests
     }
 
     [Fact]
-    public async Task ChangePassword_InvalidSession_ReturnsUnauthorized()
+    public async Task ChangePassword_UnknownUser_ReturnsNotFound()
     {
         var (ctrl, _) = Build();
-        var result = await ctrl.ChangePassword(new ChangePasswordRequest("bad-token", "x"));
-        Assert.IsType<UnauthorizedObjectResult>(result);
+        var result = await ctrl.ChangePassword(new ChangePasswordRequest("bad-user", "x"));
+        Assert.IsType<NotFoundResult>(result);
     }
 }

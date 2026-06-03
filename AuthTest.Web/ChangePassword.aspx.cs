@@ -24,9 +24,9 @@ namespace AuthTest.Web
         {
             var newPassword = txtNewPassword.Text;
             var confirmPassword = txtConfirmPassword.Text;
-            var token = SessionHelper.SessionToken;
+            var username = SessionHelper.CurrentUsername;
 
-            if (string.IsNullOrWhiteSpace(token))
+            if (string.IsNullOrWhiteSpace(username))
             {
                 Response.Redirect("Login.aspx");
                 return;
@@ -53,7 +53,7 @@ namespace AuthTest.Web
                 return;
             }
 
-            var result = await ApiClient.PostAsync<Dictionary<string, object>>("auth/change-password", new { token, newPassword });
+            var result = await ApiClient.PostAsync<Dictionary<string, object>>("auth/change-password", new { username, newPassword });
 
             bool success = result.ContainsKey("success") && (bool)result["success"];
             if (!success)

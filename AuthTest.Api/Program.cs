@@ -23,7 +23,6 @@ builder.Services.AddControllers()
     {
         options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
     });
-builder.Services.AddSingleton<SessionStore>();
 builder.Services.AddScoped<ChallengeStore>();
 
 var app = builder.Build();

@@ -1,6 +1,5 @@
 using AuthTest.Api.Data;
 using AuthTest.Api.Models;
-using AuthTest.Api.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -11,12 +10,10 @@ namespace AuthTest.Api.Controllers;
 public class UsersController : ControllerBase
 {
     private readonly AppDbContext _db;
-    private readonly SessionStore _sessions;
 
-    public UsersController(AppDbContext db, SessionStore sessions)
+    public UsersController(AppDbContext db)
     {
         _db = db;
-        _sessions = sessions;
     }
 
     [HttpGet]

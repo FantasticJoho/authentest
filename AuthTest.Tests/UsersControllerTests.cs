@@ -13,8 +13,7 @@ public class UsersControllerTests
     private static (UsersController ctrl, AppDbContext db) Build()
     {
         var db = DbHelper.CreateContext();
-        var sessions = new SessionStore();
-        return (new UsersController(db, sessions), db);
+        return (new UsersController(db), db);
     }
 
     // ── List ──────────────────────────────────────────────────────────────

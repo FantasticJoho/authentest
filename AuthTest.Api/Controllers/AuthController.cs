@@ -1,5 +1,4 @@
 using AuthTest.Api.Data;
-using AuthTest.Api.Services;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 
@@ -10,12 +9,10 @@ namespace AuthTest.Api.Controllers;
 public class AuthController : ControllerBase
 {
     private readonly AppDbContext _db;
-    private readonly SessionStore _sessions;
 
-    public AuthController(AppDbContext db, SessionStore sessions)
+    public AuthController(AppDbContext db)
     {
         _db = db;
-        _sessions = sessions;
     }
 
     [HttpPost("check")]
@@ -39,20 +36,16 @@ public class AuthController : ControllerBase
             .FirstOrDefaultAsync(u => u.Username.ToLower() == req.Username.ToLower());
 
         if (user is null || !BCrypt.Net.BCrypt.Verify(req.Password, user.PasswordHash))
-            return Ok(new LoginResponse(false, null, false, "Invalid credentials"));
+            return Ok(new LoginResponse(false, false, "Invalid credentials"));
 
-        var token = _sessions.CreateSession(user.Id, user.Credentials.Any());
-        return Ok(new LoginResponse(true, token, user.MustChangePassword, null));
+        return Ok(new LoginResponse(true, user.MustChangePassword, null));
     }
 
     [HttpPost("change-password")]
     public async Task<IActionResult> ChangePassword([FromBody] ChangePasswordRequest req)
     {
-        var session = _sessions.GetSession(req.Token);
-        if (session is null)
-            return Unauthorized(new { error = "Invalid session" });
-
-        var user = await _db.Users.FindAsync(session.UserId);
+        var user = await _db.Users
+            .FirstOrDefaultAsync(u => u.Username.ToLower() == req.Username.ToLower());
         if (user is null)
             return NotFound();
 
@@ -67,5 +60,5 @@ public class AuthController : ControllerBase
 public record CheckRequest(string Username);
 public record CheckResponse(bool Exists, bool HasWebAuthn, bool MustChangePassword);
 public record LoginRequest(string Username, string Password);
-public record LoginResponse(bool Success, string? Token, bool MustChangePassword, string? Error);
-public record ChangePasswordRequest(string Token, string NewPassword);
+public record LoginResponse(bool Success, bool MustChangePassword, string? Error);
+public record ChangePasswordRequest(string Username, string NewPassword);
