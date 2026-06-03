@@ -40,7 +40,8 @@ namespace AuthTest.Web
             pnlUsername.Visible = false;
             if (hasWebAuthn)
             {
-                var options = await ApiClient.PostAsync<object>("webauthn/authenticate/begin", new { username });
+                var rpId = Request.Headers["Host"]?.Split(':')[0] ?? Request.Url?.Host;
+                var options = await ApiClient.PostAsync<object>("webauthn/authenticate/begin", new { username, rpId });
                 hdnAssertionOptions.Value = Json.Serialize(options);
                 pnlWebAuthn.Visible = true;
             }
@@ -85,8 +86,9 @@ namespace AuthTest.Web
 
             try
             {
+                var rpId = Request.Headers["Host"]?.Split(':')[0] ?? Request.Url?.Host;
                 var assertionResponse = Json.Deserialize<object>(assertionJson);
-                var result = await ApiClient.PostAsync<Dictionary<string, object>>("webauthn/authenticate/complete", new { username, assertionResponse });
+                var result = await ApiClient.PostAsync<Dictionary<string, object>>("webauthn/authenticate/complete", new { username, assertionResponse, rpId });
 
                 if (result == null) { lblError.Text = "Réponse vide du serveur."; pnlWebAuthn.Visible = true; return; }
 

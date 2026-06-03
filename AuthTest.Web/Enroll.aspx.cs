@@ -25,8 +25,9 @@ namespace AuthTest.Web
         {
             try
             {
+                var rpId = Request.Headers["Host"]?.Split(':')[0] ?? Request.Url?.Host;
                 var options = await ApiClient.PostAsync<object>("webauthn/register/begin",
-                    new { token = SessionHelper.SessionToken });
+                    new { token = SessionHelper.SessionToken, rpId });
                 hdnCreationOptions.Value = Json.Serialize(options);
             }
             catch (Exception ex)
@@ -52,9 +53,10 @@ namespace AuthTest.Web
 
             try
             {
+                var rpId = Request.Headers["Host"]?.Split(':')[0] ?? Request.Url?.Host;
                 var attestationResponse = Json.Deserialize<object>(attestationJson);
                 var result = await ApiClient.PostAsync<Dictionary<string, object>>("webauthn/register/complete",
-                    new { token = SessionHelper.SessionToken, keyName, attestationResponse });
+                    new { token = SessionHelper.SessionToken, keyName, attestationResponse, rpId });
 
                 bool success = result.ContainsKey("success") && result["success"] is bool b && b;
                 if (!success)

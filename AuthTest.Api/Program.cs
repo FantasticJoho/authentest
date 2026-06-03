@@ -1,23 +1,12 @@
 using AuthTest.Api.Data;
 using AuthTest.Api.Middleware;
 using AuthTest.Api.Services;
-using Fido2NetLib;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddDbContext<AppDbContext>(o =>
     o.UseInMemoryDatabase("AuthTestDb"));
-
-builder.Services.AddSingleton<IFido2>(_ => new Fido2NetLib.Fido2(new Fido2Configuration
-{
-    ServerDomain = builder.Configuration["Fido2:ServerDomain"] ?? "localhost",
-    ServerName   = builder.Configuration["Fido2:ServerName"] ?? "AuthTest",
-    Origins = new HashSet<string>(
-        builder.Configuration.GetSection("Fido2:Origins").Get<string[]>()
-        ?? new[] { "http://localhost:8081" },
-        StringComparer.OrdinalIgnoreCase)
-}));
 
 builder.Services.AddMemoryCache();
 
