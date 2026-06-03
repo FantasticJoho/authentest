@@ -13,6 +13,12 @@ public class ApiKeyMiddleware
 
     public async Task InvokeAsync(HttpContext context)
     {
+        if (context.Request.Path.StartsWithSegments("/health", StringComparison.OrdinalIgnoreCase))
+        {
+            await _next(context);
+            return;
+        }
+
         if (!context.Request.Headers.TryGetValue("X-Api-Key", out var key) ||
             key != _config["ApiKey"])
         {

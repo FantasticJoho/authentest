@@ -1,6 +1,9 @@
 using AuthTest.Api.Data;
+using AuthTest.Api.Health;
 using AuthTest.Api.Middleware;
 using AuthTest.Api.Services;
+using Microsoft.AspNetCore.Diagnostics.HealthChecks;
+using Microsoft.Extensions.Diagnostics.HealthChecks;
 using Microsoft.EntityFrameworkCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -24,6 +27,9 @@ builder.Services.AddControllers()
         options.JsonSerializerOptions.PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase;
     });
 builder.Services.AddScoped<ChallengeStore>();
+builder.Services.AddHealthChecks()
+    .AddCheck("self", () => HealthCheckResult.Healthy(), tags: ["live"])
+    .AddCheck<DatabaseReadinessHealthCheck>("database", tags: ["ready"]);
 
 var app = builder.Build();
 
@@ -45,6 +51,14 @@ using (var scope = app.Services.CreateScope())
 
 app.UseCors("WebFormsPolicy");
 app.UseMiddleware<ApiKeyMiddleware>();
+app.MapHealthChecks("/health/live", new HealthCheckOptions
+{
+    Predicate = check => check.Tags.Contains("live")
+});
+app.MapHealthChecks("/health/ready", new HealthCheckOptions
+{
+    Predicate = check => check.Tags.Contains("ready")
+});
 app.MapControllers();
 
 app.Run();
